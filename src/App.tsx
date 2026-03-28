@@ -10,6 +10,7 @@ import LoginPage from './pages/Login';
 import UsersManagement from './pages/UsersManagement';
 import PlansManagement from './pages/PlansManagement';
 import SubscribePlan from './pages/SubscribePlan';
+import UsageLimits from './pages/UsageLimits';
 import Modal from './components/Modal';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
@@ -94,7 +95,7 @@ const AppContent: React.FC = () => {
         {/* Rotas Administrativas */}
         <Route path="/adm/usuarios" element={<DashboardLayout><UsersManagement /></DashboardLayout>} />
         <Route path="/adm/planos" element={<DashboardLayout><PlansManagement /></DashboardLayout>} />
-        <Route path="/adm/limites" element={<DashboardLayout><div className="p-10 text-gray-500">Limites de Uso</div></DashboardLayout>} />
+        <Route path="/adm/limites" element={<DashboardLayout><UsageLimits /></DashboardLayout>} />
         <Route path="/adm/whatsapp" element={<DashboardLayout><div className="p-10 text-gray-500">Integração WhatsApp</div></DashboardLayout>} />
 
         <Route path="/adm-legacy" element={<ProtectedRoute><AdminPage settings={adminSettings} onSave={() => {}} onBack={() => navigate('/')} /></ProtectedRoute>} />
