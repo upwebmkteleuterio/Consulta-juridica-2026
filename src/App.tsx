@@ -7,6 +7,7 @@ import LandingPage from './components/LandingPage';
 import ChatInterface from './components/ChatInterface';
 import AdminPage from './components/AdminPage';
 import LoginPage from './pages/Login';
+import UsersManagement from './pages/UsersManagement';
 import Modal from './components/Modal';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
@@ -83,11 +84,23 @@ const AppContent: React.FC = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<LoginPage isRegister={true} />} />
+        
+        {/* Rotas com DashboardLayout */}
         <Route path="/" element={<DashboardLayout><LandingPage onStartChat={handleSendMessage} /></DashboardLayout>} />
         <Route path="/chat" element={<DashboardLayout><ChatInterface state={chatState} settings={adminSettings} onSend={handleSendMessage} onNewChat={() => setIsModalOpen(true)} /></DashboardLayout>} />
-        <Route path="/minha-conta" element={<DashboardLayout><div className="p-10 text-white">Minha Conta</div></DashboardLayout>} />
-        <Route path="/planos" element={<DashboardLayout><div className="p-10 text-white">Planos</div></DashboardLayout>} />
-        <Route path="/adm" element={<ProtectedRoute><AdminPage settings={adminSettings} onSave={() => {}} onBack={() => navigate('/')} /></ProtectedRoute>} />
+        
+        <Route path="/minha-conta" element={<DashboardLayout><div className="p-10 text-gray-500">Minha Conta</div></DashboardLayout>} />
+        <Route path="/planos" element={<DashboardLayout><div className="p-10 text-gray-500">Planos</div></DashboardLayout>} />
+
+        {/* Rotas Administrativas */}
+        <Route path="/adm/usuarios" element={<DashboardLayout><UsersManagement /></DashboardLayout>} />
+        <Route path="/adm/planos" element={<DashboardLayout><div className="p-10 text-gray-500">Gestão de Planos</div></DashboardLayout>} />
+        <Route path="/adm/limites" element={<DashboardLayout><div className="p-10 text-gray-500">Limites de Uso</div></DashboardLayout>} />
+        <Route path="/adm/whatsapp" element={<DashboardLayout><div className="p-10 text-gray-500">Integração WhatsApp</div></DashboardLayout>} />
+
+        <Route path="/adm-legacy" element={<ProtectedRoute><AdminPage settings={adminSettings} onSave={() => {}} onBack={() => navigate('/')} /></ProtectedRoute>} />
+        
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={() => { setChatState({messages: [], isThinking: false}); setIsModalOpen(false); navigate('/'); }} title="Limpar histórico?" message="Deseja apagar a conversa?" />
     </>
