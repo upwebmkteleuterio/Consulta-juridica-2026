@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { CreditCard, Save, Plus, Trash2, Info, CheckCircle2, X } from 'lucide-react';
+import { CreditCard, Save, Plus, Trash2, Info, CheckCircle2 } from 'lucide-react';
 import { usePlans } from '../hooks/usePlans';
 import { cn } from '../lib/utils';
 
@@ -44,7 +44,7 @@ const PlansManagement = () => {
                     <input 
                       value={plan.name} 
                       onChange={(e) => updatePlan(plan.id, { name: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:bg-white outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                       placeholder="Ex: Assinatura Consulta"
                     />
                   </div>
@@ -53,7 +53,7 @@ const PlansManagement = () => {
                     <input 
                       value={plan.badge} 
                       onChange={(e) => updatePlan(plan.id, { badge: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:bg-white outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                       placeholder="Ex: Mais Escolhido"
                     />
                   </div>
@@ -62,7 +62,7 @@ const PlansManagement = () => {
                     <input 
                       value={plan.price} 
                       onChange={(e) => updatePlan(plan.id, { price: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:bg-white outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -83,7 +83,7 @@ const PlansManagement = () => {
                     <input 
                       value={plan.productId} 
                       onChange={(e) => updatePlan(plan.id, { productId: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:bg-white outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -91,7 +91,7 @@ const PlansManagement = () => {
                     <input 
                       value={plan.checkoutLink} 
                       onChange={(e) => updatePlan(plan.id, { checkoutLink: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:bg-white outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -123,7 +123,7 @@ const PlansManagement = () => {
                             newBenefits[idx] = e.target.value;
                             updatePlan(plan.id, { benefits: newBenefits });
                           }}
-                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-2.5 pl-10 text-xs focus:bg-white outline-none transition-all"
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-2.5 pl-10 text-xs text-gray-900 focus:bg-white outline-none transition-all"
                         />
                       </div>
                       <button 

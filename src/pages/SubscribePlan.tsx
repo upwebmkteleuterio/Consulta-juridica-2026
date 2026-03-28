@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePlans } from '../hooks/usePlans';
-import { Check, ArrowRight, ShieldCheck, Zap, Globe } from 'lucide-react';
+import { Check, ArrowRight, ShieldCheck, Zap, MessageSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const SubscribePlan = () => {
@@ -21,10 +21,10 @@ const SubscribePlan = () => {
             <span className="text-[10px] font-black uppercase tracking-widest text-champagne">Planos e Assinaturas</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight">
-            Planos de <span className="bg-gradient-to-r from-champagne to-yellow-200 bg-clip-text text-transparent">Monitoramento</span>
+            Planos de <span className="text-champagne">Consulta Jurídica</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Acompanhe seus processos em tempo real com IA e receba atualizações no WhatsApp.
+            Tire suas dúvidas jurídicas instantaneamente com nossa IA especializada e receba orientação estratégica no WhatsApp.
           </p>
         </div>
 
@@ -95,11 +95,11 @@ const SubscribePlan = () => {
           </div>
           <div className="flex flex-col items-center text-center gap-4">
             <div className="p-4 bg-yellow-50/5 rounded-3xl">
-              <Globe className="w-8 h-8 text-champagne" />
+              <MessageSquare className="w-8 h-8 text-champagne" />
             </div>
             <div>
-              <h4 className="font-bold text-white uppercase tracking-wider text-sm mb-1">Sincronização 24/7</h4>
-              <p className="text-xs text-gray-500">Tribunais ativos o tempo todo</p>
+              <h4 className="font-bold text-white uppercase tracking-wider text-sm mb-1">Suporte Jurídico</h4>
+              <p className="text-xs text-gray-500">Especialistas prontos para agir</p>
             </div>
           </div>
         </div>
