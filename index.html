@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0B1120">
+    <title>Magalhães & Gomes - IA Jurídica</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="https://advogadoriodejaneiro.com/wp-content/uploads/2020/08/cropped-logo-MG-perfil-192x192.jpg">
+    <link rel="apple-touch-icon" href="https://advogadoriodejaneiro.com/wp-content/uploads/2020/08/cropped-logo-MG-perfil-192x192.jpg">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B1120;
+            color: white;
+            overflow-x: hidden;
+        }
+        .bg-champagne { background-color: #C5A059; }
+        .text-champagne { color: #C5A059; }
+        .border-champagne { border-color: #C5A059; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        *:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .prose-legal p { margin-bottom: 1.25rem; }
+        .prose-legal p:last-child { margin-bottom: 0; }
+        .prose-legal strong { color: #C5A059; font-weight: 700; }
+        .prose-legal ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.75rem; margin-bottom: 0.75rem; }
+        .prose-legal li { margin-bottom: 0.5rem; }
+
+        @keyframes soft-pulse-gold {
+          0% { box-shadow: 0 0 0 0 rgba(197, 160, 89, 0.4); }
+          70% { box-shadow: 0 0 0 15px rgba(197, 160, 89, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(197, 160, 89, 0); }
+        }
+        .animate-soft-pulse-gold {
+          animation: soft-pulse-gold 2s infinite;
+        }
+
+        @keyframes pulse-red {
+          0%, 100% { color: #ef4444; opacity: 1; }
+          50% { color: #b91c1c; opacity: 0.6; }
+        }
+        .animate-pulse-red {
+          animation: pulse-red 1.5s infinite;
+        }
+
+        .input-container-fade::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(to top, #1A2333 20%, transparent 100%);
+            pointer-events: none;
+            border-radius: 0 0 16px 16px;
+            z-index: 10;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+    "react-markdown": "https://esm.sh/react-markdown@^9.0.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.446.0",
+    "clsx": "https://esm.sh/clsx@2.1.1",
+    "tailwind-merge": "https://esm.sh/tailwind-merge@2.5.2",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

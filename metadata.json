@@ -1,0 +1,7 @@
+{
+  "name": "Magalhães & Gomes - IA Jurídica",
+  "description": "Sistema de inteligência artificial especializada para tirar dúvidas jurídicas do escritório Magalhães & Gomes Advogados.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
