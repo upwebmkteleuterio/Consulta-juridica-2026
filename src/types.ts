@@ -23,6 +23,16 @@ export interface AdminSettings {
   internalInstructions: string;
 }
 
+export interface Plan {
+  id: string;
+  name: string;
+  badge: string;
+  price: string;
+  productId: string;
+  checkoutLink: string;
+  benefits: string[];
+}
+
 export enum ViewMode {
   LANDING = 'landing',
   CHAT = 'chat',

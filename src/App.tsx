@@ -8,6 +8,8 @@ import ChatInterface from './components/ChatInterface';
 import AdminPage from './components/AdminPage';
 import LoginPage from './pages/Login';
 import UsersManagement from './pages/UsersManagement';
+import PlansManagement from './pages/PlansManagement';
+import SubscribePlan from './pages/SubscribePlan';
 import Modal from './components/Modal';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
@@ -20,8 +22,6 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (loading) return null;
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 };
-
-const STORAGE_KEY = 'magalhaes_gomes_chat_history_v3';
 
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
@@ -43,7 +43,7 @@ const AppContent: React.FC = () => {
           malicePrompt: data.malice_prompt,
           negativePrompt: data.negative_prompt,
           whatsappNumber: data.whatsapp_number,
-          internalInstructions: data.internal_instructions
+          internalInstructions: data.internalInstructions
         });
       }
     };
@@ -85,16 +85,15 @@ const AppContent: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<LoginPage isRegister={true} />} />
         
-        {/* Rotas com DashboardLayout */}
         <Route path="/" element={<DashboardLayout><LandingPage onStartChat={handleSendMessage} /></DashboardLayout>} />
         <Route path="/chat" element={<DashboardLayout><ChatInterface state={chatState} settings={adminSettings} onSend={handleSendMessage} onNewChat={() => setIsModalOpen(true)} /></DashboardLayout>} />
         
         <Route path="/minha-conta" element={<DashboardLayout><div className="p-10 text-gray-500">Minha Conta</div></DashboardLayout>} />
-        <Route path="/planos" element={<DashboardLayout><div className="p-10 text-gray-500">Planos</div></DashboardLayout>} />
+        <Route path="/planos" element={<DashboardLayout><SubscribePlan /></DashboardLayout>} />
 
         {/* Rotas Administrativas */}
         <Route path="/adm/usuarios" element={<DashboardLayout><UsersManagement /></DashboardLayout>} />
-        <Route path="/adm/planos" element={<DashboardLayout><div className="p-10 text-gray-500">Gestão de Planos</div></DashboardLayout>} />
+        <Route path="/adm/planos" element={<DashboardLayout><PlansManagement /></DashboardLayout>} />
         <Route path="/adm/limites" element={<DashboardLayout><div className="p-10 text-gray-500">Limites de Uso</div></DashboardLayout>} />
         <Route path="/adm/whatsapp" element={<DashboardLayout><div className="p-10 text-gray-500">Integração WhatsApp</div></DashboardLayout>} />
 
