@@ -6,7 +6,7 @@ import { ChatState, Message, AdminSettings } from './types';
 import LandingPage from './components/LandingPage';
 import ChatInterface from './components/ChatInterface';
 import AdminPage from './components/AdminPage';
-import LoginPage from './components/LoginPage';
+import LoginPage from './pages/Login';
 import Modal from './components/Modal';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
@@ -144,18 +144,18 @@ const AppContent: React.FC = () => {
 
   return (
     <Routes>
-      {/* Rotas de Autenticação (Sem Layout) */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/cadastro" element={<LoginPage isRegister={true} />} />
 
-      {/* Rota Principal (Landing) - Mantida para quem chega agora */}
+      {/* Rota Raiz agora com Layout para exibir a Sidebar */}
       <Route path="/" element={
-        <div className="bg-[#0B1120] min-h-screen text-white">
-          <LandingPage onStartChat={handleSendMessage} />
-        </div>
+        <DashboardLayout>
+          <div className="bg-[#0B1120] h-full overflow-auto">
+            <LandingPage onStartChat={handleSendMessage} />
+          </div>
+        </DashboardLayout>
       } />
 
-      {/* Rotas do Sistema (Com DashboardLayout) */}
       <Route path="/chat" element={
         <DashboardLayout>
           <ChatInterface 
@@ -192,21 +192,6 @@ const AppContent: React.FC = () => {
       } />
 
       <Route path="*" element={<Navigate to="/" replace />} />
-
-      {/* Modais Globais */}
-      <Route path="*" element={
-        <Modal
-          isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
-          onConfirm={() => {
-            setChatState({ messages: [], isThinking: false });
-            localStorage.removeItem(STORAGE_KEY);
-            setIsModalOpen(false);
-            navigate('/');
-          }}
-          title="Deseja limpar o histórico?"
-          message="Esta ação apagará toda a conversa atual localmente."
-        />
-      } />
     </Routes>
   );
 };

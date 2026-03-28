@@ -7,8 +7,6 @@ import {
   User, 
   CreditCard, 
   LogOut, 
-  LogIn, 
-  UserPlus,
   ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,7 +24,7 @@ const Sidebar = () => {
     { id: 'plans', label: 'Assinar Plano', icon: CreditCard, path: '/planos' },
   ];
 
-  // Mock de créditos para UI (será integrado via Supabase depois)
+  // Mock de créditos para UI
   const credits = {
     total: 10,
     used: 3,
@@ -48,7 +46,7 @@ const Sidebar = () => {
       {/* Navigation Menu */}
       <nav className="flex-1 px-4 space-y-1">
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || (item.id === 'chat' && location.pathname === '/');
           return (
             <button
               key={item.id}
@@ -56,7 +54,7 @@ const Sidebar = () => {
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all",
                 isActive 
-                  ? "bg-gray-50 text-[#0B1120] shadow-sm" 
+                  ? "bg-yellow-50/50 text-[#0B1120] shadow-sm" 
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
@@ -66,7 +64,6 @@ const Sidebar = () => {
           );
         })}
         
-        {/* Link para Admin se logado (Opcional dependendo da regra de negócio) */}
         {user && (
           <button
             onClick={() => navigate('/adm')}
@@ -121,28 +118,17 @@ const Sidebar = () => {
             <button 
               onClick={signOut}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-              title="Sair"
             >
               <LogOut className="w-5 h-5" />
             </button>
           </div>
         ) : (
-          <div className="space-y-2">
-            <button 
-              onClick={() => navigate('/login')}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-[#0B1120] text-white rounded-xl text-sm font-bold hover:brightness-110 transition-all"
-            >
-              <LogIn className="w-4 h-4" />
-              Entrar
-            </button>
-            <button 
-              onClick={() => navigate('/cadastro')}
-              className="w-full flex items-center justify-center gap-2 py-3 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all"
-            >
-              <UserPlus className="w-4 h-4" />
-              Cadastre-se
-            </button>
-          </div>
+          <button 
+            onClick={() => navigate('/login')}
+            className="w-full flex items-center justify-center py-4 bg-champagne text-[#0B1120] rounded-xl text-sm font-bold hover:brightness-105 transition-all shadow-md active:scale-95"
+          >
+            Entrar / Cadastrar
+          </button>
         )}
       </div>
     </aside>
