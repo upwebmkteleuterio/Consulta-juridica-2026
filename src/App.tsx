@@ -20,95 +20,34 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
-const STORAGE_KEY = 'magalhaes_gomes_chat_history_v2';
+const STORAGE_KEY = 'magalhaes_gomes_chat_history_v3';
 
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { loading: authLoading } = useAuth();
   const [adminSettings, setAdminSettings] = useState<AdminSettings>(DEFAULT_ADMIN_SETTINGS);
-  const [chatState, setChatState] = useState<ChatState>({
-    messages: [],
-    isThinking: false
-  });
+  const [chatState, setChatState] = useState<ChatState>({ messages: [], isThinking: false });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAppReady, setIsAppReady] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('admin_settings')
-          .select('*')
-          .limit(1)
-          .single();
-
-        if (data && !error) {
-          setAdminSettings({
-            officeName: data.office_name,
-            officeDescription: data.office_description,
-            foundersInfo: data.founders_info,
-            addresses: data.addresses,
-            malicePrompt: data.malice_prompt,
-            negativePrompt: data.negative_prompt,
-            whatsappNumber: data.whatsapp_number,
-            internalInstructions: data.internal_instructions
-          });
-        }
-      } catch (err) {
-        console.warn("Using default settings", err);
-      } finally {
-        setIsAppReady(true);
+      const { data } = await supabase.from('admin_settings').select('*').limit(1).single();
+      if (data) {
+        setAdminSettings({
+          officeName: data.office_name,
+          officeDescription: data.office_description,
+          foundersInfo: data.founders_info,
+          addresses: data.addresses,
+          malicePrompt: data.malice_prompt,
+          negativePrompt: data.negative_prompt,
+          whatsappNumber: data.whatsapp_number,
+          internalInstructions: data.internal_instructions
+        });
       }
     };
-
     fetchSettings();
-
-    const savedChat = localStorage.getItem(STORAGE_KEY);
-    if (savedChat) {
-      try {
-        const history = JSON.parse(savedChat);
-        if (history && history.length > 0) {
-          setChatState(prev => ({ ...prev, messages: history }));
-        }
-      } catch (e) {}
-    }
   }, []);
-
-  useEffect(() => {
-    if (chatState.messages.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(chatState.messages));
-    }
-  }, [chatState.messages]);
-
-  const handleSaveSettings = async (newSettings: AdminSettings) => {
-    try {
-      const { data: existing } = await supabase.from('admin_settings').select('id').limit(1).single();
-      
-      const { error } = await supabase
-        .from('admin_settings')
-        .update({
-          office_name: newSettings.officeName,
-          office_description: newSettings.officeDescription,
-          founders_info: newSettings.foundersInfo,
-          addresses: newSettings.addresses,
-          malice_prompt: newSettings.malicePrompt,
-          negative_prompt: newSettings.negativePrompt,
-          whatsapp_number: newSettings.whatsappNumber,
-          internal_instructions: newSettings.internalInstructions
-        })
-        .eq('id', existing?.id);
-
-      if (error) throw error;
-      
-      setAdminSettings(newSettings);
-      alert("Configurações persistidas no Supabase!");
-      navigate('/');
-    } catch (err) {
-      alert("Erro ao salvar no banco de dados.");
-      console.error(err);
-    }
-  };
 
   const handleSendMessage = useCallback(async (text: string) => {
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text, timestamp: Date.now() };
@@ -133,66 +72,25 @@ const AppContent: React.FC = () => {
         }
       }
     } catch (error) {
-      setChatState(prev => ({
-        ...prev, isThinking: false,
-        messages: [...prev.messages, { id: Date.now().toString(), role: 'model', content: "Houve um erro na comunicação com a IA Jurídica. Por favor, tente novamente.", timestamp: Date.now() }]
-      }));
+      setChatState(prev => ({ ...prev, isThinking: false }));
     }
   }, [chatState.messages, location.pathname, adminSettings, navigate]);
 
-  if (authLoading || !isAppReady) return null;
+  if (authLoading) return null;
 
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/cadastro" element={<LoginPage isRegister={true} />} />
-
-      {/* Rota Raiz agora com Layout para exibir a Sidebar */}
-      <Route path="/" element={
-        <DashboardLayout>
-          <div className="bg-[#0B1120] h-full overflow-auto">
-            <LandingPage onStartChat={handleSendMessage} />
-          </div>
-        </DashboardLayout>
-      } />
-
-      <Route path="/chat" element={
-        <DashboardLayout>
-          <ChatInterface 
-            state={chatState} 
-            settings={adminSettings}
-            onSend={handleSendMessage} 
-            onNewChat={() => setIsModalOpen(true)}
-          />
-        </DashboardLayout>
-      } />
-
-      <Route path="/minha-conta" element={
-        <DashboardLayout>
-          <div className="p-10 flex flex-col items-center justify-center h-full text-gray-400">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Minha Conta</h2>
-            <p>Página em desenvolvimento.</p>
-          </div>
-        </DashboardLayout>
-      } />
-
-      <Route path="/planos" element={
-        <DashboardLayout>
-          <div className="p-10 flex flex-col items-center justify-center h-full text-gray-400">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Assinar Plano</h2>
-            <p>Página em desenvolvimento.</p>
-          </div>
-        </DashboardLayout>
-      } />
-
-      <Route path="/adm" element={
-        <ProtectedRoute>
-          <AdminPage settings={adminSettings} onSave={handleSaveSettings} onBack={() => navigate('/')} />
-        </ProtectedRoute>
-      } />
-
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/cadastro" element={<LoginPage isRegister={true} />} />
+        <Route path="/" element={<DashboardLayout><LandingPage onStartChat={handleSendMessage} /></DashboardLayout>} />
+        <Route path="/chat" element={<DashboardLayout><ChatInterface state={chatState} settings={adminSettings} onSend={handleSendMessage} onNewChat={() => setIsModalOpen(true)} /></DashboardLayout>} />
+        <Route path="/minha-conta" element={<DashboardLayout><div className="p-10 text-white">Minha Conta</div></DashboardLayout>} />
+        <Route path="/planos" element={<DashboardLayout><div className="p-10 text-white">Planos</div></DashboardLayout>} />
+        <Route path="/adm" element={<ProtectedRoute><AdminPage settings={adminSettings} onSave={() => {}} onBack={() => navigate('/')} /></ProtectedRoute>} />
+      </Routes>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={() => { setChatState({messages: [], isThinking: false}); setIsModalOpen(false); navigate('/'); }} title="Limpar histórico?" message="Deseja apagar a conversa?" />
+    </>
   );
 };
 

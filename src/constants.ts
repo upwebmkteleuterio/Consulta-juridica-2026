@@ -1,4 +1,3 @@
-
 import { AdminSettings, Message } from "./types";
 
 export const FIRM_LOGO = "https://advogadoriodejaneiro.com/wp-content/uploads/2024/07/WhatsApp-Image-2022-09-24-at-14.28.30-removebg-preview-300x170.png";

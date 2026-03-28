@@ -1,4 +1,3 @@
-
 import { Message } from "../types";
 
 export const generateWhatsAppLink = (messages: Message[], phoneNumber: string) => {
@@ -9,27 +8,12 @@ export const generateWhatsAppLink = (messages: Message[], phoneNumber: string) =
   
   const baseMessage = `Olá, vim através da IA jurídica e este é o histórico completo de nossa conversa:\n\n${conversation}`;
   const encodedMessage = encodeURIComponent(baseMessage);
-  
-  // Remove qualquer caractere não numérico do telefone antes de gerar o link
   const cleanNumber = phoneNumber.replace(/\D/g, '');
-  
   return `https://wa.me/55${cleanNumber}?text=${encodedMessage}`;
 };
 
 export const detectPositiveIntent = (text: string): boolean => {
   const lower = text.toLowerCase();
-  const positivePatterns = [
-    "sim", 
-    "quero", 
-    "claro", 
-    "aceito", 
-    "pode ser", 
-    "agora", 
-    "falar", 
-    "contatar", 
-    "ajuda",
-    "gostaria de falar",
-    "falar com um de seus advogados"
-  ];
+  const positivePatterns = ["sim", "quero", "claro", "aceito", "pode ser", "agora", "falar"];
   return positivePatterns.some(pattern => lower.includes(pattern)) && lower.length < 100;
 };
