@@ -96,7 +96,6 @@ const AppContent: React.FC = () => {
         <Route path="/adm/usuarios" element={<DashboardLayout><UsersManagement /></DashboardLayout>} />
         <Route path="/adm/planos" element={<DashboardLayout><PlansManagement /></DashboardLayout>} />
         <Route path="/adm/limites" element={<DashboardLayout><UsageLimits /></DashboardLayout>} />
-        <Route path="/adm/whatsapp" element={<DashboardLayout><div className="p-10 text-gray-500">Integração WhatsApp</div></DashboardLayout>} />
 
         <Route path="/adm-legacy" element={<ProtectedRoute><AdminPage settings={adminSettings} onSave={() => {}} onBack={() => navigate('/')} /></ProtectedRoute>} />
         

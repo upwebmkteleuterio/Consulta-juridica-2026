@@ -10,11 +10,10 @@ import {
   Users,
   Settings,
   ShieldCheck,
-  Smartphone
+  Gavel
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { FIRM_LOGO } from '../constants';
 
 const Sidebar = () => {
   const { user, signOut } = useAuth();
@@ -28,26 +27,31 @@ const Sidebar = () => {
     { id: 'plans', label: 'Assinar Plano', icon: CreditCard, path: '/planos' },
   ];
 
-  // Menu Administrativo (Sempre visível para desenvolvimento)
+  // Menu Administrativo (Removido WhatsApp)
   const adminMenu = [
     { id: 'users', label: 'Usuários', icon: Users, path: '/adm/usuarios' },
     { id: 'plans-mgmt', label: 'Gestão de Planos', icon: Settings, path: '/adm/planos' },
     { id: 'limits', label: 'Limites de Uso', icon: ShieldCheck, path: '/adm/limites' },
-    { id: 'whatsapp', label: 'Integração WhatsApp', icon: Smartphone, path: '/adm/whatsapp' },
   ];
 
   const credits = { total: 10, used: 3, plan: 'Grátis' };
 
   return (
     <aside className="w-72 h-screen bg-white border-r border-gray-100 flex flex-col fixed left-0 top-0 z-50 overflow-y-auto scrollbar-hide">
-      {/* Logo Section */}
-      <div className="p-8">
-        <img 
-          src={FIRM_LOGO} 
-          alt="Magalhães & Gomes" 
-          className="h-16 w-auto cursor-pointer" 
-          onClick={() => navigate('/')}
-        />
+      {/* Brand Header Section conforme anexo */}
+      <div 
+        className="p-8 flex items-center gap-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
+        onClick={() => navigate('/')}
+      >
+        <div className="w-12 h-12 bg-champagne rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-champagne/20">
+          <Gavel className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex flex-col">
+          <h1 className="text-lg font-bold text-gray-900 leading-none">Consulta Jurídica</h1>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight leading-tight mt-1">
+            Receba orientações jurídicas seguras para o seu problema
+          </p>
+        </div>
       </div>
 
       <nav className="flex-1 px-4 space-y-8">
@@ -119,12 +123,12 @@ const Sidebar = () => {
         {user ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-champagne font-bold">
+              <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-champagne font-bold">
                 {user.email?.[0].toUpperCase()}
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-gray-900 truncate max-w-[120px]">
-                  {user.user_metadata.first_name || 'Usuário'}
+                  {user.user_metadata?.first_name || 'Usuário'}
                 </span>
                 <span className="text-[10px] text-gray-500 truncate max-w-[120px]">
                   {user.email}
