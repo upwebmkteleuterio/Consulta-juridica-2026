@@ -74,7 +74,6 @@ const Sidebar = () => {
             })}
           </div>
 
-          {/* Seção ADM visível apenas para administradores */}
           {isAdmin && (
             <div className="space-y-2 animate-in slide-in-from-left-4 duration-300">
               <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">ADM</p>
@@ -100,21 +99,24 @@ const Sidebar = () => {
           )}
         </nav>
 
-        <div className="bg-[#0B1120] rounded-2xl p-5 text-white space-y-4 shadow-lg mx-2">
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Seus créditos / Mês</span>
-            <span className="text-[10px] px-2 py-0.5 bg-champagne rounded text-white font-bold">{credits.plan}</span>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-end">
-              <span className="text-xs font-medium text-gray-300">Conversas com IA Jurídica</span>
-              <span className="text-xs font-bold">{credits.used}/{credits.total}</span>
+        {/* Créditos apenas para usuários logados */}
+        {user && (
+          <div className="bg-[#0B1120] rounded-2xl p-5 text-white space-y-4 shadow-lg mx-2 animate-in fade-in zoom-in-95">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Seus créditos / Mês</span>
+              <span className="text-[10px] px-2 py-0.5 bg-champagne rounded text-white font-bold">{credits.plan}</span>
             </div>
-            <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-              <div className="h-full bg-champagne transition-all" style={{ width: `${(credits.used / credits.total) * 100}%` }} />
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <span className="text-xs font-medium text-gray-300">Conversas com IA Jurídica</span>
+                <span className="text-xs font-bold">{credits.used}/{credits.total}</span>
+              </div>
+              <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-full bg-champagne transition-all" style={{ width: `${(credits.used / credits.total) * 100}%` }} />
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="p-6 border-t border-gray-100 bg-white">

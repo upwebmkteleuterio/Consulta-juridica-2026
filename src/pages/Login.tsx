@@ -27,7 +27,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ isRegister = false }) => {
 
     try {
       if (isRegister) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -39,12 +39,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ isRegister = false }) => {
           }
         });
         if (error) throw error;
-        alert("Cadastro realizado! Verifique seu e-mail para confirmar a conta.");
-        navigate('/login');
+        
+        // Se a confirmação de e-mail estiver desativada no Supabase, 
+        // o usuário já terá uma sessão e podemos ir para a Home.
+        if (data?.session) {
+          navigate('/');
+        } else {
+          setError("Cadastro realizado! Por favor, faça login com suas credenciais.");
+          navigate('/login');
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate('/chat');
+        navigate('/'); // Login sempre vai para a Consulta Jurídica (Landing)
       }
     } catch (err: any) {
       setError(err.message || "Erro ao processar sua solicitação.");
@@ -55,7 +62,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ isRegister = false }) => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
-      {/* Lado Esquerdo - Branding (Visível apenas em Desktop) */}
+      {/* Lado Esquerdo - Branding */}
       <div className="hidden md:flex md:w-1/2 bg-[#0B1120] p-12 flex-col justify-between relative overflow-hidden">
         <div className="relative z-10">
           <img src={FIRM_LOGO} alt="Logo" className="h-20 object-contain brightness-0 invert" />
@@ -67,8 +74,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ isRegister = false }) => {
             Tenha acesso instantâneo a análises de direitos com base em mais de 10.000 processos reais.
           </p>
         </div>
-        
-        {/* Elemento Decorativo */}
         <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-champagne/10 rounded-full blur-[100px]"></div>
         <div className="relative z-10">
           <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">
