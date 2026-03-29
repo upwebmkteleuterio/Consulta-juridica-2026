@@ -2,8 +2,19 @@ import { GoogleGenAI } from "@google/genai";
 import { generateSystemInstruction } from "../constants";
 import { Message, AdminSettings } from "../types";
 
+// Tenta ler de todas as fontes possíveis no frontend
+const GEMINI_KEY = 
+  (import.meta.env.VITE_GEMINI_API_KEY) || 
+  (process.env.GEMINI_API_KEY) || 
+  (process.env.API_KEY) || 
+  "";
+
 export const getGeminiStreamResponse = async (history: Message[], prompt: string, settings: AdminSettings) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+  if (!GEMINI_KEY) {
+    throw new Error("API Key do Gemini não detectada no ambiente. Verifique seu arquivo .env");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
   
   const contents = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -28,7 +39,9 @@ export const getGeminiStreamResponse = async (history: Message[], prompt: string
 };
 
 export const transcribeAudio = async (base64Audio: string, mimeType: string = "audio/webm") => {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+  if (!GEMINI_KEY) return null;
+  
+  const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
   
   try {
     const response = await ai.models.generateContent({
