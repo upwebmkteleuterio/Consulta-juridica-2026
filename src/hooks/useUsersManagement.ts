@@ -1,4 +1,6 @@
+"use client";
 
+import { useEffect, useState } from 'react';
 import { supabase } from '../integrations/supabase/client';
 
 export interface UserProfile {
@@ -17,71 +19,49 @@ export interface UserStats {
   admins: number;
 }
 
-/**
- * Hook preparado para buscar dados reais do Supabase futuramente.
- * Por enquanto, retorna dados mockados conforme o layout solicitado.
- */
 export const useUsersManagement = () => {
-  // Mock de estatísticas
-  const stats: UserStats = {
-    total: 115,
-    subscribers: 1,
-    admins: 2
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [stats, setStats] = useState<UserStats>({ total: 0, subscribers: 0, admins: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      // Aqui estamos buscando da tabela profiles recém criada
+      const { data, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      const formattedUsers: UserProfile[] = data.map(u => ({
+        id: u.id,
+        name: `${u.first_name} ${u.last_activity || ''}`,
+        email: '---', // Email fica no auth.users, por segurança não vem aqui sem join complexo
+        whatsapp: u.whatsapp || '---',
+        plan: 'FREE', // Lógica de planos será integrada em breve
+        last_activity: new Date(u.updated_at).toLocaleDateString('pt-BR'),
+        is_admin: u.role === 'admin'
+      }));
+
+      setUsers(formattedUsers);
+      setStats({
+        total: formattedUsers.length,
+        subscribers: 0,
+        admins: formattedUsers.filter(u => u.is_admin).length
+      });
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Mock de usuários
-  const users: UserProfile[] = [
-    { 
-      id: '1', 
-      name: 'Bruna Cristina', 
-      email: 'felicianobruna87@gmail.com', 
-      whatsapp: '24981036820', 
-      plan: 'FREE', 
-      last_activity: '28/03/2026',
-      is_admin: false
-    },
-    { 
-      id: '2', 
-      name: 'Roberta Santoro de Oliveira Souza', 
-      email: 'santoro.roberta@gmail.com', 
-      whatsapp: '21988631593', 
-      plan: 'FREE', 
-      last_activity: '28/03/2026',
-      is_admin: false
-    },
-    { 
-      id: '3', 
-      name: 'Sabrine Andressa Vieira Neves', 
-      email: 'sabrineavneves@gmail.com', 
-      whatsapp: '21968389229', 
-      plan: 'FREE', 
-      last_activity: '28/03/2026',
-      is_admin: false
-    },
-    { 
-      id: '4', 
-      name: 'Bruno Gomes', 
-      email: 'concursos.bruno2@gmail.com', 
-      whatsapp: '21964088544', 
-      plan: 'FREE', 
-      last_activity: '28/03/2026',
-      is_admin: false
-    },
-    { 
-      id: '5', 
-      name: 'Weverton Silva', 
-      email: 'wevertonesophia@gmail.com', 
-      whatsapp: '21994667569', 
-      plan: 'FREE', 
-      last_activity: '28/03/2026',
-      is_admin: false
-    },
-  ];
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  return {
-    users,
-    stats,
-    isLoading: false,
-    error: null
-  };
+  return { users, stats, isLoading, error, refresh: fetchData };
 };

@@ -18,10 +18,19 @@ import { supabase } from './integrations/supabase/client';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import DashboardLayout from './components/DashboardLayout';
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  return user ? <>{children}</> : <Navigate to="/login" replace />;
+const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly = false }) => {
+  const { user, isAdmin, loading } = useAuth();
+  
+  if (loading) return (
+    <div className="min-h-screen bg-[#0B1120] flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-champagne border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+
+  if (!user) return <Navigate to="/login" replace />;
+  if (adminOnly && !isAdmin) return <Navigate to="/" replace />;
+
+  return <>{children}</>;
 };
 
 const AppContent: React.FC = () => {
@@ -44,7 +53,7 @@ const AppContent: React.FC = () => {
           malicePrompt: data.malice_prompt,
           negativePrompt: data.negative_prompt,
           whatsappNumber: data.whatsapp_number,
-          internalInstructions: data.internalInstructions
+          internalInstructions: data.internal_instructions
         });
       }
     };
@@ -89,15 +98,26 @@ const AppContent: React.FC = () => {
         <Route path="/" element={<DashboardLayout><LandingPage onStartChat={handleSendMessage} /></DashboardLayout>} />
         <Route path="/chat" element={<DashboardLayout><ChatInterface state={chatState} settings={adminSettings} onSend={handleSendMessage} onNewChat={() => setIsModalOpen(true)} /></DashboardLayout>} />
         
-        <Route path="/minha-conta" element={<DashboardLayout><div className="p-10 text-gray-500">Minha Conta</div></DashboardLayout>} />
+        <Route path="/minha-conta" element={<ProtectedRoute><DashboardLayout><div className="p-10 text-gray-500">Minha Conta</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/planos" element={<DashboardLayout><SubscribePlan /></DashboardLayout>} />
 
-        {/* Rotas Administrativas */}
-        <Route path="/adm/usuarios" element={<DashboardLayout><UsersManagement /></DashboardLayout>} />
-        <Route path="/adm/planos" element={<DashboardLayout><PlansManagement /></DashboardLayout>} />
-        <Route path="/adm/limites" element={<DashboardLayout><UsageLimits /></DashboardLayout>} />
-
-        <Route path="/adm-legacy" element={<ProtectedRoute><AdminPage settings={adminSettings} onSave={() => {}} onBack={() => navigate('/')} /></ProtectedRoute>} />
+        {/* Rotas Administrativas Protegidas */}
+        <Route path="/adm/usuarios" element={<ProtectedRoute adminOnly><DashboardLayout><UsersManagement /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/adm/planos" element={<ProtectedRoute adminOnly><DashboardLayout><PlansManagement /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/adm/limites" element={<ProtectedRoute adminOnly><DashboardLayout><UsageLimits /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/adm/configuracoes" element={<ProtectedRoute adminOnly><DashboardLayout><AdminPage settings={adminSettings} onSave={async (newSettings) => {
+          const { error } = await supabase.from('admin_settings').update({
+            office_name: newSettings.officeName,
+            office_description: newSettings.officeDescription,
+            founders_info: newSettings.foundersInfo,
+            addresses: newSettings.addresses,
+            malice_prompt: newSettings.malicePrompt,
+            negative_prompt: newSettings.negativePrompt,
+            whatsapp_number: newSettings.whatsappNumber,
+            internal_instructions: newSettings.internalInstructions
+          }).eq('id', (await supabase.from('admin_settings').select('id').limit(1).single()).data?.id);
+          if (!error) setAdminSettings(newSettings);
+        }} onBack={() => navigate('/')} /></DashboardLayout></ProtectedRoute>} />
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

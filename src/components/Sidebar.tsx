@@ -10,13 +10,14 @@ import {
   Users,
   Settings,
   ShieldCheck,
-  Gavel
+  Gavel,
+  Sliders
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 
 const Sidebar = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,13 +31,13 @@ const Sidebar = () => {
     { id: 'users', label: 'Usuários', icon: Users, path: '/adm/usuarios' },
     { id: 'plans-mgmt', label: 'Gestão de Planos', icon: Settings, path: '/adm/planos' },
     { id: 'limits', label: 'Limites de Uso', icon: ShieldCheck, path: '/adm/limites' },
+    { id: 'config', label: 'Cérebro da IA', icon: Sliders, path: '/adm/configuracoes' },
   ];
 
   const credits = { total: 10, used: 3, plan: 'Grátis' };
 
   return (
     <aside className="w-72 h-screen bg-white border-r border-gray-100 flex flex-col fixed left-0 top-0 z-50">
-      {/* Brand Header - Fixo no Topo */}
       <div 
         className="p-8 flex items-center gap-4 cursor-pointer hover:bg-gray-50/50 transition-colors border-b border-gray-50"
         onClick={() => navigate('/')}
@@ -52,10 +53,8 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Área com Rolagem (Menus e Créditos) */}
       <div className="flex-1 overflow-y-auto scrollbar-hide py-6 px-4 space-y-8">
         <nav className="space-y-8">
-          {/* Menu Principal */}
           <div className="space-y-1">
             {mainMenu.map((item) => {
               const isActive = location.pathname === item.path || (item.id === 'home' && location.pathname === '/');
@@ -75,31 +74,32 @@ const Sidebar = () => {
             })}
           </div>
 
-          {/* Seção ADM */}
-          <div className="space-y-2">
-            <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">ADM</p>
-            <div className="space-y-1">
-              {adminMenu.map((item) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => navigate(item.path)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all",
-                      isActive ? "bg-yellow-50/50 text-[#0B1120]" : "text-gray-500 hover:bg-gray-50"
-                    )}
-                  >
-                    <item.icon className={cn("w-5 h-5", isActive ? "text-champagne" : "text-gray-400")} />
-                    {item.label}
-                  </button>
-                );
-              })}
+          {/* Seção ADM visível apenas para administradores */}
+          {isAdmin && (
+            <div className="space-y-2 animate-in slide-in-from-left-4 duration-300">
+              <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">ADM</p>
+              <div className="space-y-1">
+                {adminMenu.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => navigate(item.path)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all",
+                        isActive ? "bg-yellow-50/50 text-[#0B1120]" : "text-gray-500 hover:bg-gray-50"
+                      )}
+                    >
+                      <item.icon className={cn("w-5 h-5", isActive ? "text-champagne" : "text-gray-400")} />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </nav>
 
-        {/* Credit Panel - Agora rola com os menus se necessário */}
         <div className="bg-[#0B1120] rounded-2xl p-5 text-white space-y-4 shadow-lg mx-2">
           <div className="flex justify-between items-center">
             <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Seus créditos / Mês</span>
@@ -117,35 +117,28 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* User Footer Section - Fixo no Rodapé */}
       <div className="p-6 border-t border-gray-100 bg-white">
         {user ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-champagne font-bold">
-                {user.email?.[0].toUpperCase()}
+                {profile?.first_name?.[0].toUpperCase() || user.email?.[0].toUpperCase()}
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-gray-900 truncate max-w-[120px]">
-                  {user.user_metadata?.first_name || 'Usuário'}
+                  {profile?.first_name || user.user_metadata?.first_name || 'Usuário'}
                 </span>
                 <span className="text-[10px] text-gray-500 truncate max-w-[120px]">
                   {user.email}
                 </span>
               </div>
             </div>
-            <button 
-              onClick={signOut}
-              className="p-2 text-gray-400 hover:text-red-500 transition-all"
-            >
+            <button onClick={signOut} className="p-2 text-gray-400 hover:text-red-500 transition-all">
               <LogOut className="w-5 h-5" />
             </button>
           </div>
         ) : (
-          <button 
-            onClick={() => navigate('/login')}
-            className="w-full flex items-center justify-center py-4 bg-champagne text-[#0B1120] rounded-xl text-sm font-bold hover:brightness-105 transition-all shadow-md active:scale-95"
-          >
+          <button onClick={() => navigate('/login')} className="w-full flex items-center justify-center py-4 bg-champagne text-[#0B1120] rounded-xl text-sm font-bold hover:brightness-105 transition-all shadow-md active:scale-95">
             Entrar / Cadastrar
           </button>
         )}
