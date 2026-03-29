@@ -3,18 +3,29 @@
 import React from 'react';
 import { usePlans } from '../hooks/usePlans';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Check, ArrowRight, ShieldCheck, Zap, MessageSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const SubscribePlan = () => {
   const { plans } = usePlans();
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
+
+  const handleCheckoutClick = (e: React.MouseEvent<HTMLAnchorElement>, baseLink: string) => {
+    // Se não estiver logado, cancela o clique e joga pro login
+    if (!user) {
+      e.preventDefault();
+      navigate('/login');
+      return;
+    }
+  };
 
   const getCheckoutUrl = (baseLink: string) => {
     if (!baseLink) return '#';
     const cleanLink = baseLink.trim();
     
-    // Se não houver usuário logado, retorna o link limpo
+    // Se não houver usuário logado (redundância de segurança), retorna o link limpo
     if (!user) return cleanLink;
     
     const params = new URLSearchParams();
@@ -30,10 +41,14 @@ const SubscribePlan = () => {
       params.set('name', fullName);
     }
     
-    // Telefone (Tabela Profiles)
+    // Telefone (Tabela Profiles) - Adicionando 55 como padrão Brasil
     if (profile?.whatsapp) {
       const digitsOnly = profile.whatsapp.replace(/\D/g, '');
-      if (digitsOnly) params.set('phone', digitsOnly);
+      if (digitsOnly) {
+        // Se o usuário já não digitou o 55, nós adicionamos
+        const phoneWithCountry = digitsOnly.startsWith('55') ? digitsOnly : `55${digitsOnly}`;
+        params.set('phone', phoneWithCountry);
+      }
     }
 
     const queryString = params.toString();
@@ -97,8 +112,9 @@ const SubscribePlan = () => {
 
               <a 
                 href={getCheckoutUrl(plan.checkout_link)}
-                target="_blank"
+                target={user ? "_blank" : "_self"}
                 rel="noopener noreferrer"
+                onClick={(e) => handleCheckoutClick(e, plan.checkout_link)}
                 className="w-full bg-white text-[#0B1120] py-5 rounded-[24px] font-black uppercase tracking-widest flex items-center justify-center gap-3 group-hover:bg-champagne transition-all shadow-xl"
               >
                 Assinar Agora
