@@ -2,11 +2,22 @@
 
 import React from 'react';
 import { usePlans } from '../hooks/usePlans';
+import { useAuth } from '../contexts/AuthContext';
 import { Check, ArrowRight, ShieldCheck, Zap, MessageSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const SubscribePlan = () => {
   const { plans } = usePlans();
+  const { user } = useAuth();
+
+  const getCheckoutUrl = (baseLink: string) => {
+    if (!baseLink) return '#';
+    if (!user?.email) return baseLink;
+    
+    // Adiciona o e-mail como parâmetro para a Cakto identificar o usuário
+    const separator = baseLink.includes('?') ? '&' : '?';
+    return `${baseLink}${separator}email=${encodeURIComponent(user.email)}`;
+  };
 
   return (
     <div className="min-h-full bg-[#0B1120] text-white overflow-hidden relative">
@@ -61,7 +72,7 @@ const SubscribePlan = () => {
               </div>
 
               <a 
-                href={plan.checkout_link}
+                href={getCheckoutUrl(plan.checkout_link)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-white text-[#0B1120] py-5 rounded-[24px] font-black uppercase tracking-widest flex items-center justify-center gap-3 group-hover:bg-champagne transition-all shadow-xl"
