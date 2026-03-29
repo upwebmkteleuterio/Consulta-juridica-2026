@@ -64,7 +64,8 @@ const AppContent: React.FC = () => {
           negativePrompt: data.negative_prompt,
           whatsappNumber: data.whatsapp_number,
           internalInstructions: data.internal_instructions,
-          freeMonthlyLimit: data.free_monthly_limit || 3
+          freeMonthlyLimit: data.free_monthly_limit || 3,
+          adminMonthlyLimit: data.admin_monthly_limit || 9999
         });
       }
     };
@@ -78,9 +79,9 @@ const AppContent: React.FC = () => {
       return;
     }
 
-    // Calcula o limite real: Se for admin, livre. Se for PRO, usa snapshot. Se for Free, usa o global do admin_settings.
+    // Calcula o limite real consultando as configurações globais
     const limit = profile?.role === 'admin' 
-      ? 9999 
+      ? adminSettings.adminMonthlyLimit 
       : (profile?.subscription_status === 'pro' 
           ? (profile?.monthly_limit_snapshot || 50) 
           : adminSettings.freeMonthlyLimit);
@@ -160,7 +161,8 @@ const AppContent: React.FC = () => {
               negative_prompt: newSettings.negative_prompt,
               whatsapp_number: newSettings.whatsappNumber,
               internal_instructions: newSettings.internalInstructions,
-              free_monthly_limit: newSettings.freeMonthlyLimit
+              free_monthly_limit: newSettings.freeMonthlyLimit,
+              admin_monthly_limit: newSettings.adminMonthlyLimit
             }).eq('id', current.id);
             setAdminSettings(newSettings);
           }

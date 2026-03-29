@@ -22,6 +22,7 @@ export interface AdminSettings {
   whatsappNumber: string;
   internalInstructions: string;
   freeMonthlyLimit: number;
+  adminMonthlyLimit: number;
 }
 
 export interface Plan {

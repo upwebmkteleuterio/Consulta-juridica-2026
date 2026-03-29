@@ -29,15 +29,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, profile, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [globalFreeLimit, setGlobalFreeLimit] = useState(DEFAULT_ADMIN_SETTINGS.freeMonthlyLimit);
+  const [limits, setLimits] = useState({ 
+    free: DEFAULT_ADMIN_SETTINGS.freeMonthlyLimit, 
+    admin: DEFAULT_ADMIN_SETTINGS.adminMonthlyLimit 
+  });
 
   useEffect(() => {
-    const fetchGlobalLimit = async () => {
-      const { data } = await supabase.from('admin_settings').select('free_monthly_limit').limit(1).single();
-      if (data) setGlobalFreeLimit(data.free_monthly_limit);
+    const fetchLimits = async () => {
+      const { data } = await supabase.from('admin_settings').select('free_monthly_limit, admin_monthly_limit').limit(1).single();
+      if (data) setLimits({ 
+        free: data.free_monthly_limit || 3, 
+        admin: data.admin_monthly_limit || 9999 
+      });
     };
-    fetchGlobalLimit();
-  }, [profile?.credits_used]); // Recarrega quando os créditos mudam
+    fetchLimits();
+  }, [profile?.credits_used]); 
 
   const mainMenu = [
     { id: 'home', label: 'Consulta Jurídica', icon: MessageSquare, path: '/' },
@@ -52,18 +58,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { id: 'config', label: 'Cérebro da IA', icon: Sliders, path: '/adm/configuracoes' },
   ];
 
-  // Cálculo de créditos: Prioriza limite global se for usuário free para refletir mudanças do admin instantaneamente
+  // Cálculo de limites globais
   const totalLimit = profile?.role === 'admin' 
-    ? 9999 
+    ? limits.admin 
     : (profile?.subscription_status === 'pro' 
         ? (profile?.monthly_limit_snapshot || 50) 
-        : globalFreeLimit);
+        : limits.free);
 
   const used = profile?.credits_used || 0;
-  const remaining = totalLimit - used;
+  const remaining = Math.max(0, totalLimit - used);
   const percentage = Math.min((used / totalLimit) * 100, 100);
   
-  // Cores dinâmicas: Amarela (padrão), Vermelha (falta 2 ou menos), Vazia (zerado)
   const barColor = remaining <= 0 ? 'bg-gray-600' : (remaining <= 2 ? 'bg-red-500' : 'bg-champagne');
 
   const handleNav = (path: string) => {
@@ -143,8 +148,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="bg-[#0B1120] rounded-2xl p-5 text-white space-y-4 shadow-lg mx-2">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Créditos / Mês</span>
-                <span className="text-[10px] px-2 py-0.5 bg-champagne rounded text-white font-bold">
-                  {profile?.subscription_status === 'pro' ? 'Pro' : 'Grátis'}
+                <span className={cn(
+                  "text-[10px] px-2 py-0.5 rounded text-white font-bold",
+                  isAdmin ? "bg-red-500" : "bg-champagne"
+                )}>
+                  {isAdmin ? 'Admin' : (profile?.subscription_status === 'pro' ? 'Pro' : 'Grátis')}
                 </span>
               </div>
               <div className="space-y-2">

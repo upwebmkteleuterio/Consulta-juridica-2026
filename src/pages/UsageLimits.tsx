@@ -1,20 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, User, Crown, Save, Loader2, Info } from 'lucide-react';
+import { ShieldCheck, User, Crown, Save, Loader2, Info, Settings } from 'lucide-react';
 import { supabase } from '../integrations/supabase/client';
 import { usePlans } from '../hooks/usePlans';
 
 const UsageLimits = () => {
   const { plans, updatePlan, saveAll: savePlans, isSaving: isSavingPlans } = usePlans();
   const [freeLimit, setFreeLimit] = useState(3);
+  const [adminLimit, setAdminLimit] = useState(9999);
   const [isSavingAdmin, setIsSavingAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchAdminSettings = async () => {
-      const { data } = await supabase.from('admin_settings').select('free_monthly_limit').limit(1).single();
-      if (data) setFreeLimit(data.free_monthly_limit);
+      const { data } = await supabase.from('admin_settings').select('free_monthly_limit, admin_monthly_limit').limit(1).single();
+      if (data) {
+        setFreeLimit(data.free_monthly_limit || 3);
+        setAdminLimit(data.admin_monthly_limit || 9999);
+      }
       setIsLoading(false);
     };
     fetchAdminSettings();
@@ -23,13 +27,14 @@ const UsageLimits = () => {
   const handleSaveAll = async () => {
     setIsSavingAdmin(true);
     try {
-      // Salva limite free
       const { data: settings } = await supabase.from('admin_settings').select('id').limit(1).single();
       if (settings) {
-        await supabase.from('admin_settings').update({ free_monthly_limit: freeLimit }).eq('id', settings.id);
+        await supabase.from('admin_settings').update({ 
+          free_monthly_limit: freeLimit,
+          admin_monthly_limit: adminLimit
+        }).eq('id', settings.id);
       }
       
-      // Salva limites dos planos pro
       await savePlans();
       alert("Configurações de limites salvas com sucesso!");
     } catch (err) {
@@ -64,6 +69,30 @@ const UsageLimits = () => {
       </div>
 
       <div className="space-y-6">
+        {/* Card Administradores */}
+        <div className="bg-white border-l-4 border-red-500 rounded-2xl shadow-sm p-8 border border-gray-100 flex flex-col md:flex-row gap-8 items-start">
+          <div className="bg-red-50 p-4 rounded-2xl">
+            <Settings className="w-8 h-8 text-red-600" />
+          </div>
+          <div className="flex-1 space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Limites para Administradores</h2>
+              <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">Contas com cargo Admin</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase">Consultas IA Jurídica (Mensal)</label>
+                <input 
+                  type="number"
+                  value={adminLimit}
+                  onChange={(e) => setAdminLimit(parseInt(e.target.value) || 0)}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Card Gratuito */}
         <div className="bg-white border-l-4 border-blue-400 rounded-2xl shadow-sm p-8 border border-gray-100 flex flex-col md:flex-row gap-8 items-start">
           <div className="bg-blue-50 p-4 rounded-2xl">
