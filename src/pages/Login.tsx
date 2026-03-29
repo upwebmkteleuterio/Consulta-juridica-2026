@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, Loader2, AlertCircle, User, Phone, ArrowRight } from 'lucide-react';
+import { Lock, Mail, Loader2, AlertCircle, User, Phone, ArrowRight, ArrowLeft } from 'lucide-react';
 import { FIRM_LOGO } from '../constants';
 
 interface LoginPageProps {
@@ -40,8 +40,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ isRegister = false }) => {
         });
         if (error) throw error;
         
-        // Se a confirmação de e-mail estiver desativada no Supabase, 
-        // o usuário já terá uma sessão e podemos ir para a Home.
         if (data?.session) {
           navigate('/');
         } else {
@@ -51,7 +49,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ isRegister = false }) => {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate('/'); // Login sempre vai para a Consulta Jurídica (Landing)
+        navigate('/');
       }
     } catch (err: any) {
       setError(err.message || "Erro ao processar sua solicitação.");
@@ -83,8 +81,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ isRegister = false }) => {
       </div>
 
       {/* Lado Direito - Formulário */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12">
+      <div className="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 relative">
         <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-right-4 duration-700">
+          <button 
+            onClick={() => navigate('/')} 
+            className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors mb-4 group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-xs font-bold uppercase tracking-widest">Voltar ao início</span>
+          </button>
+
           <div className="text-center md:text-left">
             <h2 className="text-3xl font-bold text-gray-900">
               {isRegister ? "Crie sua conta" : "Bem-vindo de volta"}
@@ -152,7 +158,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ isRegister = false }) => {
             )}
 
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Email Profissional</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-300" />
                 <input
