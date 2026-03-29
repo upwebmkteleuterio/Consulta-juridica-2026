@@ -12,7 +12,6 @@ import PlansManagement from './pages/PlansManagement';
 import SubscribePlan from './pages/SubscribePlan';
 import UsageLimits from './pages/UsageLimits';
 import Modal from './components/Modal';
-import DebugPanel from './components/DebugPanel';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
 import { supabase } from './integrations/supabase/client';
@@ -51,10 +50,10 @@ const AppContent: React.FC = () => {
           officeDescription: data.office_description,
           foundersInfo: data.founders_info,
           addresses: data.addresses,
-          malicePrompt: data.malice_prompt,
-          negativePrompt: data.negative_prompt,
-          whatsappNumber: data.whatsapp_number,
-          internalInstructions: data.internal_instructions
+          malice_prompt: data.malice_prompt,
+          negative_prompt: data.negative_prompt,
+          whatsapp_number: data.whatsapp_number,
+          internal_instructions: data.internal_instructions
         });
       }
     };
@@ -122,9 +121,6 @@ const AppContent: React.FC = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={() => { setChatState({messages: [], isThinking: false}); setIsModalOpen(false); navigate('/'); }} title="Limpar histórico?" message="Deseja apagar a conversa?" />
-      
-      {/* O painel de debug aparecerá aqui */}
-      <DebugPanel />
     </>
   );
 };

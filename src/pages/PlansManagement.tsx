@@ -1,12 +1,20 @@
 "use client";
 
 import React from 'react';
-import { CreditCard, Save, Plus, Trash2, Info, CheckCircle2 } from 'lucide-react';
+import { CreditCard, Save, Plus, Trash2, Info, CheckCircle2, Loader2 } from 'lucide-react';
 import { usePlans } from '../hooks/usePlans';
 import { cn } from '../lib/utils';
 
 const PlansManagement = () => {
-  const { plans, addPlan, updatePlan, removePlan } = usePlans();
+  const { plans, isSaving, isLoading, addPlan, updatePlan, removePlan, saveAll } = usePlans();
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-champagne" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
@@ -21,8 +29,12 @@ const PlansManagement = () => {
           </div>
           <p className="text-sm text-gray-500">Gerencie os preços e links de checkout da Cakto que aparecerão para os usuários.</p>
         </div>
-        <button className="flex items-center gap-2 bg-[#00A86B] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:brightness-105 transition-all">
-          <Save className="w-4 h-4" />
+        <button 
+          onClick={saveAll}
+          disabled={isSaving}
+          className="flex items-center gap-2 bg-[#00A86B] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:brightness-105 transition-all disabled:opacity-50"
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Salvar Tudo
         </button>
       </div>
@@ -51,7 +63,7 @@ const PlansManagement = () => {
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-gray-400 uppercase">Etiqueta (Badge)</label>
                     <input 
-                      value={plan.badge} 
+                      value={plan.badge || ''} 
                       onChange={(e) => updatePlan(plan.id, { badge: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                       placeholder="Ex: Mais Escolhido"
@@ -81,16 +93,16 @@ const PlansManagement = () => {
                       <Info className="w-3 h-3 text-gray-300" />
                     </div>
                     <input 
-                      value={plan.productId} 
-                      onChange={(e) => updatePlan(plan.id, { productId: e.target.value })}
+                      value={plan.product_id || ''} 
+                      onChange={(e) => updatePlan(plan.id, { product_id: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-gray-400 uppercase">Link de Checkout</label>
                     <input 
-                      value={plan.checkoutLink} 
-                      onChange={(e) => updatePlan(plan.id, { checkoutLink: e.target.value })}
+                      value={plan.checkout_link || ''} 
+                      onChange={(e) => updatePlan(plan.id, { checkout_link: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                     />
                   </div>

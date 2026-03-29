@@ -28,8 +28,8 @@ export interface Plan {
   name: string;
   badge: string;
   price: string;
-  productId: string;
-  checkoutLink: string;
+  product_id: string;
+  checkout_link: string;
   benefits: string[];
 }
 

@@ -1,35 +1,40 @@
-import { useState } from 'react';
+"use client";
+
+import { useState, useEffect } from 'react';
 import { Plan } from '../types';
+import { supabase } from '../integrations/supabase/client';
 
 export const usePlans = () => {
-  // Dados mockados iniciais baseados no anexo
-  const [plans, setPlans] = useState<Plan[]>([
-    {
-      id: '1',
-      name: 'Assinatura Consulta Processo',
-      badge: '',
-      price: '29,90',
-      productId: '7d3b0fef-d60f-4786-8e84-d2170a075b8',
-      checkoutLink: 'https://pay.cakto.com.br/yo75vpp_81795(',
-      benefits: [
-        'Busque por CPF',
-        'Busque por CNPJ',
-        'Busque por nome de uma pessoa',
-        'Monitore 5 processos e receba a atu',
-        'Faça até 60 buscas por nº de proces'
-      ]
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const fetchPlans = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('plans')
+      .select('*')
+      .order('created_at', { ascending: true });
+    
+    if (!error && data) {
+      setPlans(data as Plan[]);
     }
-  ]);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchPlans();
+  }, []);
 
   const addPlan = () => {
     const newPlan: Plan = {
-      id: Date.now().toString(),
-      name: '',
+      id: crypto.randomUUID(),
+      name: 'Novo Plano',
       badge: '',
       price: '0,00',
-      productId: '',
-      checkoutLink: '',
-      benefits: ['Novo benefício']
+      product_id: '',
+      checkout_link: '',
+      benefits: ['Acesso ilimitado']
     };
     setPlans([...plans, newPlan]);
   };
@@ -38,9 +43,38 @@ export const usePlans = () => {
     setPlans(plans.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
-  const removePlan = (id: string) => {
+  const removePlan = async (id: string) => {
+    // Se o ID for um UUID real (não temporário), removemos do banco
+    if (id.length > 20) {
+      await supabase.from('plans').delete().eq('id', id);
+    }
     setPlans(plans.filter(p => p.id !== id));
   };
 
-  return { plans, addPlan, updatePlan, removePlan };
+  const saveAll = async () => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.from('plans').upsert(
+        plans.map(p => ({
+          id: p.id,
+          name: p.name,
+          badge: p.badge,
+          price: p.price,
+          product_id: p.product_id,
+          checkout_link: p.checkout_link,
+          benefits: p.benefits,
+          updated_at: new Date().toISOString()
+        }))
+      );
+      if (error) throw error;
+      await fetchPlans(); // Recarrega para garantir sincronia
+    } catch (err) {
+      console.error("Erro ao salvar planos:", err);
+      alert("Erro ao salvar as alterações.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return { plans, isLoading, isSaving, addPlan, updatePlan, removePlan, saveAll, refresh: fetchPlans };
 };
