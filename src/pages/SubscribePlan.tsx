@@ -12,28 +12,35 @@ const SubscribePlan = () => {
 
   const getCheckoutUrl = (baseLink: string) => {
     if (!baseLink) return '#';
-    if (!user?.email) return baseLink;
+    const cleanLink = baseLink.trim();
     
-    // Criamos os parâmetros para preenchimento automático
+    // Se não houver usuário logado, retorna o link limpo
+    if (!user) return cleanLink;
+    
     const params = new URLSearchParams();
     
-    // E-mail (Obrigatório para identificação no Webhook)
-    params.set('email', user.email);
+    // E-mail do usuário (Sessão Supabase)
+    if (user.email) {
+      params.set('email', user.email);
+    }
     
-    // Nome Completo
-    if (profile?.first_name) {
-      const fullName = `${profile.first_name} ${profile.last_name || ''}`.trim();
+    // Nome do perfil (Tabela Profiles)
+    const fullName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
+    if (fullName) {
       params.set('name', fullName);
     }
     
-    // Telefone / WhatsApp (Apenas dígitos)
+    // Telefone (Tabela Profiles)
     if (profile?.whatsapp) {
-      const cleanPhone = profile.whatsapp.replace(/\D/g, '');
-      params.set('phone', cleanPhone);
+      const digitsOnly = profile.whatsapp.replace(/\D/g, '');
+      if (digitsOnly) params.set('phone', digitsOnly);
     }
-    
-    const separator = baseLink.includes('?') ? '&' : '?';
-    return `${baseLink}${separator}${params.toString()}`;
+
+    const queryString = params.toString();
+    if (!queryString) return cleanLink;
+
+    const separator = cleanLink.includes('?') ? '&' : '?';
+    return `${cleanLink}${separator}${queryString}`;
   };
 
   return (
