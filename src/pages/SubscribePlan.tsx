@@ -61,10 +61,10 @@ const SubscribePlan = () => {
               </div>
 
               <a 
-                href={plan.checkoutLink}
+                href={plan.checkout_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full bg-white text-[#0B1120] py-5 rounded-[24px] font-black uppercase tracking-widest flex items-center justify-center gap-3 group-hover:bg-champagne group-hover:text-white transition-all shadow-xl"
+                className="w-full bg-white text-[#0B1120] py-5 rounded-[24px] font-black uppercase tracking-widest flex items-center justify-center gap-3 group-hover:bg-champagne transition-all shadow-xl"
               >
                 Assinar Agora
                 <ArrowRight className="w-5 h-5" />
