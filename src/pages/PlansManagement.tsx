@@ -3,6 +3,7 @@
 import React from 'react';
 import { CreditCard, Save, Plus, Trash2, Info, CheckCircle2, Loader2 } from 'lucide-react';
 import { usePlans } from '../hooks/usePlans';
+import PriceInput from '../components/PriceInput';
 import { cn } from '../lib/utils';
 
 const PlansManagement = () => {
@@ -71,9 +72,9 @@ const PlansManagement = () => {
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-gray-400 uppercase">Preço (R$)</label>
-                    <input 
+                    <PriceInput 
                       value={plan.price} 
-                      onChange={(e) => updatePlan(plan.id, { price: e.target.value })}
+                      onChange={(val) => updatePlan(plan.id, { price: val })}
                       className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                     />
                   </div>
