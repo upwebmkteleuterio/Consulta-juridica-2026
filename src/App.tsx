@@ -15,7 +15,6 @@ import MyAccount from './pages/MyAccount';
 import Modal from './components/Modal';
 import AuthModal from './components/AuthModal';
 import LimitModal from './components/LimitModal';
-import DebugOverlay from './components/DebugOverlay';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
 import { supabase } from './integrations/supabase/client';
@@ -79,7 +78,6 @@ const AppContent: React.FC = () => {
       return;
     }
 
-    // Calcula o limite real consultando as configurações globais
     const limit = profile?.role === 'admin' 
       ? adminSettings.adminMonthlyLimit 
       : (profile?.subscription_status === 'pro' 
@@ -184,8 +182,6 @@ const AppContent: React.FC = () => {
         onClose={() => setIsLimitModalOpen(false)} 
         isPro={profile?.subscription_status === 'pro'} 
       />
-
-      <DebugOverlay />
     </>
   );
 };
