@@ -15,6 +15,7 @@ import MyAccount from './pages/MyAccount';
 import Modal from './components/Modal';
 import AuthModal from './components/AuthModal';
 import LimitModal from './components/LimitModal';
+import DebugOverlay from './components/DebugOverlay'; // Novo import
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
 import { supabase } from './integrations/supabase/client';
@@ -73,21 +74,18 @@ const AppContent: React.FC = () => {
   }, []);
 
   const handleSendMessage = useCallback(async (text: string) => {
-    // 1. Se não estiver logado, abre modal de auth e salva mensagem
     if (!user) {
       setPendingMessage(text);
       setIsAuthModalOpen(true);
       return;
     }
 
-    // 2. Se logado, verifica créditos
     const limit = profile?.role === 'admin' ? 9999 : (profile?.monthly_limit_snapshot || adminSettings.freeMonthlyLimit);
     if ((profile?.credits_used || 0) >= limit) {
       setIsLimitModalOpen(true);
       return;
     }
 
-    // Fluxo normal de envio
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text, timestamp: Date.now() };
     setChatState(prev => ({ ...prev, messages: [...prev.messages, userMsg], isThinking: true }));
     if (location.pathname !== '/chat') navigate('/chat');
@@ -120,7 +118,6 @@ const AppContent: React.FC = () => {
     }
   }, [chatState.messages, location.pathname, adminSettings, navigate, user, profile]);
 
-  // Efeito para enviar mensagem pendente após login
   useEffect(() => {
     if (user && pendingMessage && !pendingMessageSent.current) {
       pendingMessageSent.current = true;
@@ -170,7 +167,7 @@ const AppContent: React.FC = () => {
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
-        onSuccess={() => { /* O useEffect de pendingMessage cuidará do envio */ }} 
+        onSuccess={() => {}} 
       />
 
       <LimitModal 
@@ -178,6 +175,8 @@ const AppContent: React.FC = () => {
         onClose={() => setIsLimitModalOpen(false)} 
         isPro={profile?.subscription_status === 'pro'} 
       />
+
+      <DebugOverlay />
     </>
   );
 };
