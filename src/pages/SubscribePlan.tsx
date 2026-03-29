@@ -8,15 +8,32 @@ import { cn } from '../lib/utils';
 
 const SubscribePlan = () => {
   const { plans } = usePlans();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const getCheckoutUrl = (baseLink: string) => {
     if (!baseLink) return '#';
     if (!user?.email) return baseLink;
     
-    // Adiciona o e-mail como parâmetro para a Cakto identificar o usuário
+    // Criamos os parâmetros para preenchimento automático
+    const params = new URLSearchParams();
+    
+    // E-mail (Obrigatório para identificação no Webhook)
+    params.set('email', user.email);
+    
+    // Nome Completo
+    if (profile?.first_name) {
+      const fullName = `${profile.first_name} ${profile.last_name || ''}`.trim();
+      params.set('name', fullName);
+    }
+    
+    // Telefone / WhatsApp (Apenas dígitos)
+    if (profile?.whatsapp) {
+      const cleanPhone = profile.whatsapp.replace(/\D/g, '');
+      params.set('phone', cleanPhone);
+    }
+    
     const separator = baseLink.includes('?') ? '&' : '?';
-    return `${baseLink}${separator}email=${encodeURIComponent(user.email)}`;
+    return `${baseLink}${separator}${params.toString()}`;
   };
 
   return (
