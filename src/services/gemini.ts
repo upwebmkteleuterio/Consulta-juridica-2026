@@ -53,12 +53,44 @@ export const getGeminiStreamResponse = async (history: Message[], prompt: string
 
     return (async function* () {
       const decoder = new TextDecoder();
+      let buffer = '';
+      
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value);
-        (window as any).__GEMINI_DEBUG_LOGS.lastResponse = chunk;
-        yield { text: chunk };
+        
+        // Acumula o chunk no buffer e decodifica
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Divide o buffer por linhas (padrão SSE separa eventos por \n\n ou \n)
+        const lines = buffer.split('\n');
+        
+        // Mantém a última linha no buffer caso esteja incompleta
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          
+          // Ignora linhas vazias ou que não começam com "data: "
+          if (!trimmed || !trimmed.startsWith('data: ')) continue;
+          
+          try {
+            // Remove o prefixo "data: " e tenta parsear o JSON
+            const jsonStr = trimmed.replace('data: ', '');
+            const data = JSON.parse(jsonStr);
+            
+            // Extrai o texto conforme a estrutura do Gemini 3
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            
+            if (text) {
+              (window as any).__GEMINI_DEBUG_LOGS.lastResponse = text;
+              yield { text };
+            }
+          } catch (e) {
+            // Se o JSON estiver incompleto em um chunk, ele será processado no próximo
+            continue;
+          }
+        }
       }
     })();
   } catch (err: any) {
