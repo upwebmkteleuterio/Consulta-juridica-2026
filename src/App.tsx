@@ -36,7 +36,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean 
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loading: authLoading } = useAuth();
+  const { user, profile } = useAuth();
   const [adminSettings, setAdminSettings] = useState<AdminSettings>(DEFAULT_ADMIN_SETTINGS);
   const [chatState, setChatState] = useState<ChatState>({ messages: [], isThinking: false });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,10 +50,11 @@ const AppContent: React.FC = () => {
           officeDescription: data.office_description,
           foundersInfo: data.founders_info,
           addresses: data.addresses,
-          malice_prompt: data.malice_prompt,
-          negative_prompt: data.negative_prompt,
-          whatsapp_number: data.whatsapp_number,
-          internal_instructions: data.internal_instructions
+          malicePrompt: data.malice_prompt,
+          negativePrompt: data.negative_prompt,
+          whatsappNumber: data.whatsapp_number,
+          internalInstructions: data.internal_instructions,
+          freeMonthlyLimit: data.free_monthly_limit || 3
         });
       }
     };
@@ -61,6 +62,15 @@ const AppContent: React.FC = () => {
   }, []);
 
   const handleSendMessage = useCallback(async (text: string) => {
+    // Verificação de créditos (Double check)
+    if (user) {
+      const limit = profile?.role === 'admin' ? 9999 : (profile?.plan_id ? 50 : adminSettings.freeMonthlyLimit);
+      if ((profile?.credits_used || 0) >= limit) {
+        if (location.pathname !== '/chat') navigate('/chat');
+        return;
+      }
+    }
+
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text, timestamp: Date.now() };
     setChatState(prev => ({ ...prev, messages: [...prev.messages, userMsg], isThinking: true }));
     if (location.pathname !== '/chat') navigate('/chat');
@@ -82,12 +92,19 @@ const AppContent: React.FC = () => {
           });
         }
       }
+
+      // Se a resposta terminou com sucesso e o usuário está logado, desconta crédito
+      if (user) {
+        await supabase.from('profiles').update({ 
+          credits_used: (profile?.credits_used || 0) + 1,
+          updated_at: new Date().toISOString()
+        }).eq('id', user.id);
+      }
+
     } catch (error) {
       setChatState(prev => ({ ...prev, isThinking: false }));
     }
-  }, [chatState.messages, location.pathname, adminSettings, navigate]);
-
-  if (authLoading) return null;
+  }, [chatState.messages, location.pathname, adminSettings, navigate, user, profile]);
 
   return (
     <>
@@ -105,17 +122,21 @@ const AppContent: React.FC = () => {
         <Route path="/adm/planos" element={<ProtectedRoute adminOnly><DashboardLayout><PlansManagement /></DashboardLayout></ProtectedRoute>} />
         <Route path="/adm/limites" element={<ProtectedRoute adminOnly><DashboardLayout><UsageLimits /></DashboardLayout></ProtectedRoute>} />
         <Route path="/adm/configuracoes" element={<ProtectedRoute adminOnly><DashboardLayout><AdminPage settings={adminSettings} onSave={async (newSettings) => {
-          const { error } = await supabase.from('admin_settings').update({
-            office_name: newSettings.officeName,
-            office_description: newSettings.officeDescription,
-            founders_info: newSettings.foundersInfo,
-            addresses: newSettings.addresses,
-            malice_prompt: newSettings.malicePrompt,
-            negative_prompt: newSettings.negativePrompt,
-            whatsapp_number: newSettings.whatsappNumber,
-            internal_instructions: newSettings.internal_instructions
-          }).eq('id', (await supabase.from('admin_settings').select('id').limit(1).single()).data?.id);
-          if (!error) setAdminSettings(newSettings);
+          const { data: current } = await supabase.from('admin_settings').select('id').limit(1).single();
+          if (current) {
+            await supabase.from('admin_settings').update({
+              office_name: newSettings.officeName,
+              office_description: newSettings.officeDescription,
+              founders_info: newSettings.foundersInfo,
+              addresses: newSettings.addresses,
+              malice_prompt: newSettings.malicePrompt,
+              negative_prompt: newSettings.negativePrompt,
+              whatsapp_number: newSettings.whatsappNumber,
+              internal_instructions: newSettings.internal_instructions,
+              free_monthly_limit: newSettings.freeMonthlyLimit
+            }).eq('id', current.id);
+            setAdminSettings(newSettings);
+          }
         }} onBack={() => navigate('/')} /></DashboardLayout></ProtectedRoute>} />
         
         <Route path="*" element={<Navigate to="/" replace />} />
