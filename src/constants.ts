@@ -10,7 +10,8 @@ export const DEFAULT_ADMIN_SETTINGS: AdminSettings = {
   malicePrompt: "Analise o caso prevendo manobras protelatórias ou comportamentos agressivos da parte contrária. Alerte sobre riscos de perda de provas ou direitos por inércia de forma orgânica e técnica.",
   negativePrompt: "NUNCA diga que o usuário deve 'aguardar', que 'um especialista assumirá o atendimento' ou que 'alguém entrará no chat'. Este sistema NÃO possui atendimento humano direto. NUNCA escreva o texto 'BOTÃO: ...' ou tente simular botões usando texto puro ou markdown. O sistema injetará o botão real automaticamente.",
   whatsappNumber: "21998702613",
-  internalInstructions: "Mantenha um tom formal porém acolhedor. Use terminologia jurídica técnica mas explique-a de forma simples (linguagem cidadã). Sempre priorize a segurança jurídica do cliente."
+  internalInstructions: "Mantenha um tom formal porém acolhedor. Use terminologia jurídica técnica mas explique-a de forma simples (linguagem cidadã). Sempre faça quando perguntado uma estimativa de cálculo de rescisão trabalhista baseada no valor do último salário, bem como tempo de serviço.",
+  freeMonthlyLimit: 3
 };
 
 export const generateSystemInstruction = (settings: AdminSettings, history: Message[]) => {
