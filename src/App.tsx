@@ -15,7 +15,6 @@ import MyAccount from './pages/MyAccount';
 import Modal from './components/Modal';
 import AuthModal from './components/AuthModal';
 import LimitModal from './components/LimitModal';
-import DebugOverlay from './components/DebugOverlay'; // Novo import
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
 import { supabase } from './integrations/supabase/client';
@@ -44,12 +43,10 @@ const AppContent: React.FC = () => {
   const [adminSettings, setAdminSettings] = useState<AdminSettings>(DEFAULT_ADMIN_SETTINGS);
   const [chatState, setChatState] = useState<ChatState>({ messages: [], isThinking: false });
   
-  // Modais Control
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
   
-  // Pending State
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const pendingMessageSent = useRef(false);
 
@@ -60,7 +57,7 @@ const AppContent: React.FC = () => {
         setAdminSettings({
           officeName: data.office_name,
           officeDescription: data.office_description,
-          foundersInfo: data.founders_info,
+          founders_info: data.founders_info,
           addresses: data.addresses,
           malicePrompt: data.malice_prompt,
           negativePrompt: data.negative_prompt,
@@ -175,8 +172,6 @@ const AppContent: React.FC = () => {
         onClose={() => setIsLimitModalOpen(false)} 
         isPro={profile?.subscription_status === 'pro'} 
       />
-
-      <DebugOverlay />
     </>
   );
 };
