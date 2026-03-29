@@ -12,6 +12,7 @@ import PlansManagement from './pages/PlansManagement';
 import SubscribePlan from './pages/SubscribePlan';
 import UsageLimits from './pages/UsageLimits';
 import Modal from './components/Modal';
+import DebugPanel from './components/DebugPanel';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
 import { supabase } from './integrations/supabase/client';
@@ -101,7 +102,6 @@ const AppContent: React.FC = () => {
         <Route path="/minha-conta" element={<ProtectedRoute><DashboardLayout><div className="p-10 text-gray-500">Minha Conta</div></DashboardLayout></ProtectedRoute>} />
         <Route path="/planos" element={<DashboardLayout><SubscribePlan /></DashboardLayout>} />
 
-        {/* Rotas Administrativas Protegidas */}
         <Route path="/adm/usuarios" element={<ProtectedRoute adminOnly><DashboardLayout><UsersManagement /></DashboardLayout></ProtectedRoute>} />
         <Route path="/adm/planos" element={<ProtectedRoute adminOnly><DashboardLayout><PlansManagement /></DashboardLayout></ProtectedRoute>} />
         <Route path="/adm/limites" element={<ProtectedRoute adminOnly><DashboardLayout><UsageLimits /></DashboardLayout></ProtectedRoute>} />
@@ -114,7 +114,7 @@ const AppContent: React.FC = () => {
             malice_prompt: newSettings.malicePrompt,
             negative_prompt: newSettings.negativePrompt,
             whatsapp_number: newSettings.whatsappNumber,
-            internal_instructions: newSettings.internalInstructions
+            internal_instructions: newSettings.internal_instructions
           }).eq('id', (await supabase.from('admin_settings').select('id').limit(1).single()).data?.id);
           if (!error) setAdminSettings(newSettings);
         }} onBack={() => navigate('/')} /></DashboardLayout></ProtectedRoute>} />
@@ -122,6 +122,9 @@ const AppContent: React.FC = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={() => { setChatState({messages: [], isThinking: false}); setIsModalOpen(false); navigate('/'); }} title="Limpar histórico?" message="Deseja apagar a conversa?" />
+      
+      {/* O painel de debug aparecerá aqui */}
+      <DebugPanel />
     </>
   );
 };
