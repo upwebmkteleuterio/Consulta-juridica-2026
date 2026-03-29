@@ -21,6 +21,7 @@ export interface AdminSettings {
   negativePrompt: string;
   whatsappNumber: string;
   internalInstructions: string;
+  freeMonthlyLimit: number;
 }
 
 export interface Plan {
@@ -31,6 +32,7 @@ export interface Plan {
   product_id: string;
   checkout_link: string;
   benefits: string[];
+  monthly_limit: number;
 }
 
 export enum ViewMode {

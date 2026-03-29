@@ -8,7 +8,9 @@ export interface UserProfile {
   name: string;
   email: string;
   whatsapp: string;
-  plan: 'FREE' | 'PRO';
+  plan: string;
+  credits_used: number;
+  credits_limit: number;
   last_activity: string;
   is_admin: boolean;
 }
@@ -28,20 +30,24 @@ export const useUsersManagement = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Aqui estamos buscando da tabela profiles recém criada
+      // Busca perfis com informações de planos
       const { data, error: fetchError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, plans(name, monthly_limit)')
         .order('updated_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
+      const { data: adminSettings } = await supabase.from('admin_settings').select('free_monthly_limit').limit(1).single();
+
       const formattedUsers: UserProfile[] = data.map(u => ({
         id: u.id,
-        name: `${u.first_name} ${u.last_activity || ''}`,
-        email: '---', // Email fica no auth.users, por segurança não vem aqui sem join complexo
+        name: `${u.first_name || 'Usuário'} ${u.last_name || ''}`,
+        email: '---', 
         whatsapp: u.whatsapp || '---',
-        plan: 'FREE', // Lógica de planos será integrada em breve
+        plan: u.plans?.name || 'FREE',
+        credits_used: u.credits_used || 0,
+        credits_limit: u.plans?.monthly_limit || adminSettings?.free_monthly_limit || 3,
         last_activity: new Date(u.updated_at).toLocaleDateString('pt-BR'),
         is_admin: u.role === 'admin'
       }));
@@ -49,7 +55,7 @@ export const useUsersManagement = () => {
       setUsers(formattedUsers);
       setStats({
         total: formattedUsers.length,
-        subscribers: 0,
+        subscribers: formattedUsers.filter(u => u.plan !== 'FREE').length,
         admins: formattedUsers.filter(u => u.is_admin).length
       });
     } catch (err: any) {

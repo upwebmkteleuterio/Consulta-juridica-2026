@@ -34,7 +34,8 @@ export const usePlans = () => {
       price: '0,00',
       product_id: '',
       checkout_link: '',
-      benefits: ['Acesso ilimitado']
+      benefits: ['Acesso ilimitado'],
+      monthly_limit: 50
     };
     setPlans([...plans, newPlan]);
   };
@@ -44,7 +45,6 @@ export const usePlans = () => {
   };
 
   const removePlan = async (id: string) => {
-    // Se o ID for um UUID real (não temporário), removemos do banco
     if (id.length > 20) {
       await supabase.from('plans').delete().eq('id', id);
     }
@@ -63,11 +63,12 @@ export const usePlans = () => {
           product_id: p.product_id,
           checkout_link: p.checkout_link,
           benefits: p.benefits,
+          monthly_limit: p.monthly_limit,
           updated_at: new Date().toISOString()
         }))
       );
       if (error) throw error;
-      await fetchPlans(); // Recarrega para garantir sincronia
+      await fetchPlans();
     } catch (err) {
       console.error("Erro ao salvar planos:", err);
       alert("Erro ao salvar as alterações.");
