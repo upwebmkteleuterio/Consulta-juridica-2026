@@ -12,6 +12,7 @@ interface Profile {
   plan_id: string | null;
   credits_used: number;
   monthly_limit_snapshot: number | null;
+  subscription_status: string;
 }
 
 interface AuthContextType {
@@ -21,6 +22,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   isAdmin: false,
   signOut: async () => {},
+  refreshProfile: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,11 +44,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
-      .select('role, first_name, last_name, whatsapp, plan_id, credits_used, monthly_limit_snapshot')
+      .select('role, first_name, last_name, whatsapp, plan_id, credits_used, monthly_limit_snapshot, subscription_status')
       .eq('id', userId)
       .single();
     
     if (data) setProfile(data as Profile);
+  };
+
+  const refreshProfile = async () => {
+    if (user) await fetchProfile(user.id);
   };
 
   useEffect(() => {
@@ -77,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, profile, session, loading, isAdmin, signOut }}>
+    <AuthContext.Provider value={{ user, profile, session, loading, isAdmin, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

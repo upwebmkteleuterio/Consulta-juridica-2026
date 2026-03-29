@@ -26,7 +26,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ state, settings, onSend, 
   const hasCredits = creditsUsed < creditsLimit;
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }, [state.messages, state.isThinking]);
 
   useEffect(() => {
@@ -40,7 +45,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ state, settings, onSend, 
 
   return (
     <div className="flex flex-col h-full relative">
-      <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 max-w-4xl mx-auto w-full pt-10 pb-60 scrollbar-hide">
+      <main 
+        ref={scrollRef} 
+        className="flex-1 overflow-y-auto p-4 space-y-6 max-w-4xl mx-auto w-full pt-10 pb-80 scrollbar-hide"
+      >
         {state.messages.map((msg) => (
           <div key={msg.id} className={cn("flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300", msg.role === 'user' ? 'items-end' : 'items-start')}>
             <div className={cn("max-w-[90%] rounded-2xl p-4 shadow-xl", msg.role === 'user' ? 'bg-champagne text-white' : 'bg-[#1A2333] text-gray-100')}>
@@ -87,7 +95,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ state, settings, onSend, 
         )}
       </main>
 
-      <div className="fixed bottom-0 left-0 md:left-72 right-0 p-4 bg-gradient-to-t from-[#0B1120] via-[#0B1120]/90 to-transparent z-30">
+      {/* Container de Input com Gradiente para não cortar as mensagens */}
+      <div className="fixed bottom-0 left-0 md:left-72 right-0 p-4 bg-gradient-to-t from-[#0B1120] via-[#0B1120] to-transparent z-30 pt-10">
         <div className={cn("transition-opacity duration-300", !hasCredits ? "opacity-20 pointer-events-none" : "opacity-100")}>
           <InputBar 
             onSend={onSend} 

@@ -40,7 +40,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean 
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [adminSettings, setAdminSettings] = useState<AdminSettings>(DEFAULT_ADMIN_SETTINGS);
   const [chatState, setChatState] = useState<ChatState>({ messages: [], isThinking: false });
   
@@ -91,6 +91,8 @@ const AppContent: React.FC = () => {
     try {
       const stream = await getGeminiStreamResponse(chatState.messages, text, adminSettings);
       const aiMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', content: '', timestamp: Date.now() };
+      
+      // Quando o stream começa, mudamos isThinking para false pois a mensagem da IA já está "nascendo"
       setChatState(prev => ({ ...prev, messages: [...prev.messages, aiMsg], isThinking: false }));
 
       let fullContent = '';
@@ -106,15 +108,19 @@ const AppContent: React.FC = () => {
         }
       }
 
+      // Desconto de crédito após a resposta completa
       await supabase.from('profiles').update({ 
         credits_used: (profile?.credits_used || 0) + 1,
         updated_at: new Date().toISOString()
       }).eq('id', user.id);
 
+      // Atualiza o perfil localmente para refletir na UI (Sidebar/Chat)
+      await refreshProfile();
+
     } catch (error) {
       setChatState(prev => ({ ...prev, isThinking: false }));
     }
-  }, [chatState.messages, location.pathname, adminSettings, navigate, user, profile]);
+  }, [chatState.messages, location.pathname, adminSettings, navigate, user, profile, refreshProfile]);
 
   useEffect(() => {
     if (user && pendingMessage && !pendingMessageSent.current) {
@@ -150,7 +156,7 @@ const AppContent: React.FC = () => {
               malice_prompt: newSettings.malicePrompt,
               negative_prompt: newSettings.negativePrompt,
               whatsapp_number: newSettings.whatsappNumber,
-              internal_instructions: newSettings.internal_instructions,
+              internal_instructions: newSettings.internalInstructions,
               free_monthly_limit: newSettings.freeMonthlyLimit
             }).eq('id', current.id);
             setAdminSettings(newSettings);
@@ -174,7 +180,6 @@ const AppContent: React.FC = () => {
         isPro={profile?.subscription_status === 'pro'} 
       />
 
-      {/* Inspetor de Diagnóstico Avançado */}
       <DebugOverlay />
     </>
   );
