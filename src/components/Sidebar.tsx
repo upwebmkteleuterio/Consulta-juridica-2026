@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
+import { DEFAULT_ADMIN_SETTINGS } from '../constants';
+import { useEffect, useState } from 'react';
+import { supabase } from '../integrations/supabase/client';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -26,6 +29,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, profile, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [globalFreeLimit, setGlobalFreeLimit] = useState(DEFAULT_ADMIN_SETTINGS.freeMonthlyLimit);
+
+  useEffect(() => {
+    const fetchGlobalLimit = async () => {
+      const { data } = await supabase.from('admin_settings').select('free_monthly_limit').limit(1).single();
+      if (data) setGlobalFreeLimit(data.free_monthly_limit);
+    };
+    fetchGlobalLimit();
+  }, [profile?.credits_used]); // Recarrega quando os créditos mudam
 
   const mainMenu = [
     { id: 'home', label: 'Consulta Jurídica', icon: MessageSquare, path: '/' },
@@ -40,11 +52,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { id: 'config', label: 'Cérebro da IA', icon: Sliders, path: '/adm/configuracoes' },
   ];
 
-  const credits = { 
-    total: profile?.monthly_limit_snapshot || 3, 
-    used: profile?.credits_used || 0, 
-    plan: profile?.subscription_status === 'pro' ? 'Pro' : 'Grátis' 
-  };
+  // Cálculo de créditos: Prioriza limite global se for usuário free para refletir mudanças do admin instantaneamente
+  const totalLimit = profile?.role === 'admin' 
+    ? 9999 
+    : (profile?.subscription_status === 'pro' 
+        ? (profile?.monthly_limit_snapshot || 50) 
+        : globalFreeLimit);
+
+  const used = profile?.credits_used || 0;
+  const remaining = totalLimit - used;
+  const percentage = Math.min((used / totalLimit) * 100, 100);
+  
+  // Cores dinâmicas: Amarela (padrão), Vermelha (falta 2 ou menos), Vazia (zerado)
+  const barColor = remaining <= 0 ? 'bg-gray-600' : (remaining <= 2 ? 'bg-red-500' : 'bg-champagne');
 
   const handleNav = (path: string) => {
     navigate(path);
@@ -53,12 +73,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Overlay para Mobile */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden animate-in fade-in duration-300" 
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden animate-in fade-in duration-300" onClick={onClose} />
       )}
 
       <aside className={cn(
@@ -66,10 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6 flex items-center justify-between border-b border-gray-50">
-          <div 
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => handleNav('/')}
-          >
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleNav('/')}>
             <div className="w-10 h-10 bg-champagne rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-champagne/20">
               <Gavel className="w-5 h-5 text-white" />
             </div>
@@ -130,15 +143,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="bg-[#0B1120] rounded-2xl p-5 text-white space-y-4 shadow-lg mx-2">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Créditos / Mês</span>
-                <span className="text-[10px] px-2 py-0.5 bg-champagne rounded text-white font-bold">{credits.plan}</span>
+                <span className="text-[10px] px-2 py-0.5 bg-champagne rounded text-white font-bold">
+                  {profile?.subscription_status === 'pro' ? 'Pro' : 'Grátis'}
+                </span>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-end">
                   <span className="text-xs font-medium text-gray-300">Uso da IA</span>
-                  <span className="text-xs font-bold">{credits.used}/{credits.total}</span>
+                  <span className="text-xs font-bold">{used} de {totalLimit}</span>
                 </div>
                 <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-champagne transition-all" style={{ width: `${Math.min((credits.used / credits.total) * 100, 100)}%` }} />
+                  <div className={cn("h-full transition-all duration-500", barColor)} style={{ width: `${percentage}%` }} />
                 </div>
               </div>
             </div>

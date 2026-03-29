@@ -69,7 +69,7 @@ const AppContent: React.FC = () => {
       }
     };
     fetchSettings();
-  }, []);
+  }, [profile?.credits_used]);
 
   const handleSendMessage = useCallback(async (text: string) => {
     if (!user) {
@@ -78,7 +78,13 @@ const AppContent: React.FC = () => {
       return;
     }
 
-    const limit = profile?.role === 'admin' ? 9999 : (profile?.monthly_limit_snapshot || adminSettings.freeMonthlyLimit);
+    // Calcula o limite real: Se for admin, livre. Se for PRO, usa snapshot. Se for Free, usa o global do admin_settings.
+    const limit = profile?.role === 'admin' 
+      ? 9999 
+      : (profile?.subscription_status === 'pro' 
+          ? (profile?.monthly_limit_snapshot || 50) 
+          : adminSettings.freeMonthlyLimit);
+
     if ((profile?.credits_used || 0) >= limit) {
       setIsLimitModalOpen(true);
       return;
@@ -92,7 +98,6 @@ const AppContent: React.FC = () => {
       const stream = await getGeminiStreamResponse(chatState.messages, text, adminSettings);
       const aiMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', content: '', timestamp: Date.now() };
       
-      // Quando o stream começa, mudamos isThinking para false pois a mensagem da IA já está "nascendo"
       setChatState(prev => ({ ...prev, messages: [...prev.messages, aiMsg], isThinking: false }));
 
       let fullContent = '';
@@ -108,13 +113,11 @@ const AppContent: React.FC = () => {
         }
       }
 
-      // Desconto de crédito após a resposta completa
       await supabase.from('profiles').update({ 
         credits_used: (profile?.credits_used || 0) + 1,
         updated_at: new Date().toISOString()
       }).eq('id', user.id);
 
-      // Atualiza o perfil localmente para refletir na UI (Sidebar/Chat)
       await refreshProfile();
 
     } catch (error) {
@@ -154,7 +157,7 @@ const AppContent: React.FC = () => {
               founders_info: newSettings.foundersInfo,
               addresses: newSettings.addresses,
               malice_prompt: newSettings.malicePrompt,
-              negative_prompt: newSettings.negativePrompt,
+              negative_prompt: newSettings.negative_prompt,
               whatsapp_number: newSettings.whatsappNumber,
               internal_instructions: newSettings.internalInstructions,
               free_monthly_limit: newSettings.freeMonthlyLimit
