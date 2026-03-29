@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { ChatState, Message, AdminSettings } from './types';
 import LandingPage from './components/LandingPage';
@@ -13,6 +13,8 @@ import SubscribePlan from './pages/SubscribePlan';
 import UsageLimits from './pages/UsageLimits';
 import MyAccount from './pages/MyAccount';
 import Modal from './components/Modal';
+import AuthModal from './components/AuthModal';
+import LimitModal from './components/LimitModal';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
 import { supabase } from './integrations/supabase/client';
@@ -40,7 +42,15 @@ const AppContent: React.FC = () => {
   const { user, profile } = useAuth();
   const [adminSettings, setAdminSettings] = useState<AdminSettings>(DEFAULT_ADMIN_SETTINGS);
   const [chatState, setChatState] = useState<ChatState>({ messages: [], isThinking: false });
+  
+  // Modais Control
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
+  
+  // Pending State
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const pendingMessageSent = useRef(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -63,14 +73,21 @@ const AppContent: React.FC = () => {
   }, []);
 
   const handleSendMessage = useCallback(async (text: string) => {
-    if (user) {
-      const limit = profile?.role === 'admin' ? 9999 : (profile?.monthly_limit_snapshot || adminSettings.freeMonthlyLimit);
-      if ((profile?.credits_used || 0) >= limit) {
-        if (location.pathname !== '/chat') navigate('/chat');
-        return;
-      }
+    // 1. Se não estiver logado, abre modal de auth e salva mensagem
+    if (!user) {
+      setPendingMessage(text);
+      setIsAuthModalOpen(true);
+      return;
     }
 
+    // 2. Se logado, verifica créditos
+    const limit = profile?.role === 'admin' ? 9999 : (profile?.monthly_limit_snapshot || adminSettings.freeMonthlyLimit);
+    if ((profile?.credits_used || 0) >= limit) {
+      setIsLimitModalOpen(true);
+      return;
+    }
+
+    // Fluxo normal de envio
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text, timestamp: Date.now() };
     setChatState(prev => ({ ...prev, messages: [...prev.messages, userMsg], isThinking: true }));
     if (location.pathname !== '/chat') navigate('/chat');
@@ -93,17 +110,24 @@ const AppContent: React.FC = () => {
         }
       }
 
-      if (user) {
-        await supabase.from('profiles').update({ 
-          credits_used: (profile?.credits_used || 0) + 1,
-          updated_at: new Date().toISOString()
-        }).eq('id', user.id);
-      }
+      await supabase.from('profiles').update({ 
+        credits_used: (profile?.credits_used || 0) + 1,
+        updated_at: new Date().toISOString()
+      }).eq('id', user.id);
 
     } catch (error) {
       setChatState(prev => ({ ...prev, isThinking: false }));
     }
   }, [chatState.messages, location.pathname, adminSettings, navigate, user, profile]);
+
+  // Efeito para enviar mensagem pendente após login
+  useEffect(() => {
+    if (user && pendingMessage && !pendingMessageSent.current) {
+      pendingMessageSent.current = true;
+      handleSendMessage(pendingMessage);
+      setPendingMessage(null);
+    }
+  }, [user, pendingMessage, handleSendMessage]);
 
   return (
     <>
@@ -140,7 +164,20 @@ const AppContent: React.FC = () => {
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={() => { setChatState({messages: [], isThinking: false}); setIsModalOpen(false); navigate('/'); }} title="Limpar histórico?" message="Deseja apagar a conversa?" />
+      
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        onSuccess={() => { /* O useEffect de pendingMessage cuidará do envio */ }} 
+      />
+
+      <LimitModal 
+        isOpen={isLimitModalOpen} 
+        onClose={() => setIsLimitModalOpen(false)} 
+        isPro={profile?.subscription_status === 'pro'} 
+      />
     </>
   );
 };
