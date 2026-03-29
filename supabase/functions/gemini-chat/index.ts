@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -17,33 +16,33 @@ serve(async (req) => {
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     
     if (!apiKey) {
-      throw new Error("Configuração ausente: GEMINI_API_KEY não encontrada nos Secrets do Supabase.")
+      throw new Error("Configuração ausente: GEMINI_API_KEY não encontrada.")
     }
 
     const genAI = new GoogleGenerativeAI(apiKey)
-    // Mantendo a versão mais recente e performática (1.5 Flash)
+    
+    // UTILIZANDO O MODELO MAIS RECENTE: GEMINI 3 FLASH PREVIEW
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       systemInstruction: settings?.systemInstruction 
     })
 
-    // Caso de transcrição de áudio
     if (action === 'transcribe') {
       const result = await model.generateContent([
         { inlineData: { data: audio, mimeType: mimeType } },
-        { text: "Transcreva este áudio jurídico exatamente como falado, sem comentários adicionais. Se não houver fala, retorne vazio." }
+        { text: "Transcreva este áudio jurídico exatamente como falado." }
       ])
       return new Response(JSON.stringify({ text: result.response.text() }), { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       })
     }
 
-    // Fluxo de Chat com Streaming
+    // Configuração de geração otimizada para Gemini 3
     const result = await model.generateContentStream({
       contents: [...history, { role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.7,
-        topP: 0.8,
+        temperature: 1.0, // Recomendado 1.0 para Gemini 3
+        topP: 0.95,
         topK: 40,
       }
     })
@@ -66,7 +65,6 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error("[gemini-chat] Erro:", error.message)
     return new Response(JSON.stringify({ error: error.message }), { 
       status: 500, 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

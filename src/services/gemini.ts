@@ -1,7 +1,6 @@
 import { generateSystemInstruction } from "../constants";
 import { Message, AdminSettings } from "../types";
 
-// URL absoluta da sua Edge Function no Supabase
 const FUNCTION_URL = "https://roqhysljzhzcsyuiumpw.supabase.co/functions/v1/gemini-chat";
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcWh5c2xqemh6Y3N5dWl1bXB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMzE3NzgsImV4cCI6MjA4NTkwNzc3OH0.AyFrLp0tQq0w8tQC-zLselO_UomIZYAbEBQqCGSq9y0";
 
@@ -29,11 +28,11 @@ export const getGeminiStreamResponse = async (history: Message[], prompt: string
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.error || "Erro ao processar consulta jurídica.");
+    throw new Error(errorData.error || "Erro na conexão com Gemini 3.");
   }
 
   const reader = response.body?.getReader();
-  if (!reader) throw new Error("Stream de resposta não suportado pelo navegador.");
+  if (!reader) throw new Error("Stream não suportado.");
 
   return (async function* () {
     const decoder = new TextDecoder();
@@ -64,7 +63,6 @@ export const transcribeAudio = async (base64Audio: string, mimeType: string = "a
     const data = await response.json();
     return data.text;
   } catch (error) {
-    console.error("Erro na transcrição via Edge Function:", error);
     return null;
   }
 };
