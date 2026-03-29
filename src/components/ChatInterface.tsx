@@ -17,22 +17,12 @@ interface ChatInterfaceProps {
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ state, settings, onSend, onNewChat }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { profile, user } = useAuth();
+  const { profile } = useAuth();
   const navigate = useNavigate();
   const [whatsappLink, setWhatsappLink] = useState<string | null>(null);
 
-  // Lógica de créditos: Prioriza o snapshot (limite fixado no perfil)
   const creditsUsed = profile?.credits_used || 0;
-  
-  const getCreditsLimit = () => {
-    if (profile?.role === 'admin') return 9999;
-    
-    // Se o usuário tem um snapshot (limite fixado), usa ele.
-    // Se não tem (usuário novo ou erro), usa o limite global free.
-    return profile?.monthly_limit_snapshot || settings.freeMonthlyLimit || 3;
-  };
-
-  const creditsLimit = getCreditsLimit();
+  const creditsLimit = profile?.role === 'admin' ? 9999 : (profile?.monthly_limit_snapshot || settings.freeMonthlyLimit || 3);
   const hasCredits = creditsUsed < creditsLimit;
 
   useEffect(() => {
@@ -74,7 +64,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ state, settings, onSend, 
             <div className="space-y-2">
               <h3 className="text-xl font-bold text-white">Créditos esgotados</h3>
               <p className="text-gray-400 text-sm max-w-sm mx-auto">
-                Você atingiu seu limite mensal de consultas gratuitas. Assine um plano para continuar sua análise estratégica.
+                Você atingiu seu limite mensal de consultas. Assine um plano para continuar sua análise estratégica.
               </p>
             </div>
             <button 
@@ -87,7 +77,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ state, settings, onSend, 
         )}
       </main>
 
-      <div className="fixed bottom-0 left-72 right-0 p-4 bg-gradient-to-t from-[#0B1120] to-transparent">
+      <div className="fixed bottom-0 left-0 md:left-72 right-0 p-4 bg-gradient-to-t from-[#0B1120] to-transparent z-30">
         <div className={cn("transition-opacity duration-300", !hasCredits ? "opacity-20 pointer-events-none" : "opacity-100")}>
           <InputBar 
             onSend={onSend} 

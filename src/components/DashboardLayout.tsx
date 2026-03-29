@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { useLocation } from 'react-router-dom';
@@ -12,26 +12,25 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // Apenas as telas de CHAT e HOME (Consulta) devem ter fundo escuro.
-  // Todas as outras (ADM, Minha Conta, Planos) devem ter fundo claro.
   const isDarkContent = location.pathname === '/' || location.pathname === '/chat';
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Barra Lateral Fixa */}
-      <Sidebar />
+    <div className="min-h-screen flex bg-gray-50 overflow-x-hidden">
+      {/* Barra Lateral com controle de estado para Mobile */}
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* Área de Conteúdo Principal */}
+      {/* Área de Conteúdo Principal - Margem lateral apenas em desktop */}
       <div className={cn(
-        "flex-1 ml-72 flex flex-col min-h-screen transition-colors duration-300",
+        "flex-1 md:ml-72 flex flex-col min-h-screen transition-all duration-300",
         isDarkContent ? "bg-[#0B1120]" : "bg-[#F8FAFC]"
       )}>
-        {/* Barra Superior Fixa */}
-        <Topbar />
+        {/* Barra Superior */}
+        <Topbar onOpenSidebar={() => setIsSidebarOpen(true)} />
 
         {/* Conteúdo da Página */}
-        <main className="mt-20 flex-1 overflow-auto relative">
+        <main className="mt-20 flex-1 overflow-x-hidden relative">
           {children}
         </main>
       </div>
