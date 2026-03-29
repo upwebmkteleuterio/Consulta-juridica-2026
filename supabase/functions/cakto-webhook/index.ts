@@ -31,26 +31,34 @@ serve(async (req) => {
     const userId = user.id
 
     if (['purchase_approved', 'subscription_created', 'subscription_renewed'].includes(event)) {
-      // Busca o plano e seu limite ATUAL para fazer o snapshot
       const { data: plan } = await supabaseClient
         .from('plans')
-        .select('id, monthly_limit')
+        .select('id, name, monthly_limit, price')
         .eq('product_id', productId)
         .single()
       
+      // 1. Atualiza Perfil
       await supabaseClient.from('profiles').update({
         plan_id: plan?.id || null,
         subscription_status: 'pro',
         credits_used: 0,
-        monthly_limit_snapshot: plan?.monthly_limit || 50, // Carimba o limite do plano no perfil
+        monthly_limit_snapshot: plan?.monthly_limit || 50,
         last_payment_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }).eq('id', userId)
 
-      console.log(`[cakto-webhook] Usuário ${customerEmail} atualizado para PRO com limite de ${plan?.monthly_limit || 50}`)
+      // 2. Registra no Histórico (Orders)
+      await supabaseClient.from('orders').insert({
+        user_id: userId,
+        amount: plan?.price || '---',
+        status: 'approved',
+        plan_name: plan?.name || 'Plano PRO',
+        event_type: event
+      });
+
+      console.log(`[cakto-webhook] ${customerEmail} atualizado e registrado.`);
     } 
     else if (['subscription_canceled', 'subscription_renewal_refused', 'refund'].includes(event)) {
-      // Busca o limite free atual para o snapshot de retorno
       const { data: settings } = await supabaseClient.from('admin_settings').select('free_monthly_limit').single()
       
       await supabaseClient.from('profiles').update({
@@ -60,7 +68,7 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       }).eq('id', userId)
 
-      console.log(`[cakto-webhook] Usuário ${customerEmail} rebaixado para FREE.`)
+      console.log(`[cakto-webhook] ${customerEmail} rebaixado.`);
     }
 
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders })

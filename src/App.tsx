@@ -11,6 +11,7 @@ import UsersManagement from './pages/UsersManagement';
 import PlansManagement from './pages/PlansManagement';
 import SubscribePlan from './pages/SubscribePlan';
 import UsageLimits from './pages/UsageLimits';
+import MyAccount from './pages/MyAccount';
 import Modal from './components/Modal';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
@@ -62,9 +63,8 @@ const AppContent: React.FC = () => {
   }, []);
 
   const handleSendMessage = useCallback(async (text: string) => {
-    // Verificação de créditos (Double check)
     if (user) {
-      const limit = profile?.role === 'admin' ? 9999 : (profile?.plan_id ? 50 : adminSettings.freeMonthlyLimit);
+      const limit = profile?.role === 'admin' ? 9999 : (profile?.monthly_limit_snapshot || adminSettings.freeMonthlyLimit);
       if ((profile?.credits_used || 0) >= limit) {
         if (location.pathname !== '/chat') navigate('/chat');
         return;
@@ -93,7 +93,6 @@ const AppContent: React.FC = () => {
         }
       }
 
-      // Se a resposta terminou com sucesso e o usuário está logado, desconta crédito
       if (user) {
         await supabase.from('profiles').update({ 
           credits_used: (profile?.credits_used || 0) + 1,
@@ -115,7 +114,7 @@ const AppContent: React.FC = () => {
         <Route path="/" element={<DashboardLayout><LandingPage onStartChat={handleSendMessage} /></DashboardLayout>} />
         <Route path="/chat" element={<DashboardLayout><ChatInterface state={chatState} settings={adminSettings} onSend={handleSendMessage} onNewChat={() => setIsModalOpen(true)} /></DashboardLayout>} />
         
-        <Route path="/minha-conta" element={<ProtectedRoute><DashboardLayout><div className="p-10 text-gray-500">Minha Conta</div></DashboardLayout></ProtectedRoute>} />
+        <Route path="/minha-conta" element={<ProtectedRoute><DashboardLayout><MyAccount /></DashboardLayout></ProtectedRoute>} />
         <Route path="/planos" element={<DashboardLayout><SubscribePlan /></DashboardLayout>} />
 
         <Route path="/adm/usuarios" element={<ProtectedRoute adminOnly><DashboardLayout><UsersManagement /></DashboardLayout></ProtectedRoute>} />
