@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Message, ChatState, AdminSettings } from '../types';
-import { FIRM_LOGO } from '../constants';
 import InputBar from './InputBar';
 import MarkdownText from './MarkdownText';
 import { generateWhatsAppLink, detectPositiveIntent } from '../services/whatsapp';
@@ -22,9 +21,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ state, settings, onSend, 
   const navigate = useNavigate();
   const [whatsappLink, setWhatsappLink] = useState<string | null>(null);
 
-  // Lógica de créditos
+  // Lógica de créditos: Prioriza o snapshot (limite fixado no perfil)
   const creditsUsed = profile?.credits_used || 0;
-  const creditsLimit = profile?.role === 'admin' ? 9999 : (profile?.plan_id ? 50 : (settings.freeMonthlyLimit || 3));
+  
+  const getCreditsLimit = () => {
+    if (profile?.role === 'admin') return 9999;
+    
+    // Se o usuário tem um snapshot (limite fixado), usa ele.
+    // Se não tem (usuário novo ou erro), usa o limite global free.
+    return profile?.monthly_limit_snapshot || settings.freeMonthlyLimit || 3;
+  };
+
+  const creditsLimit = getCreditsLimit();
   const hasCredits = creditsUsed < creditsLimit;
 
   useEffect(() => {

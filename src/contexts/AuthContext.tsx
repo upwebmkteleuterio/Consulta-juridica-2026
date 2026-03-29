@@ -9,6 +9,9 @@ interface Profile {
   first_name: string;
   last_name: string;
   whatsapp: string;
+  plan_id: string | null;
+  credits_used: number;
+  monthly_limit_snapshot: number | null;
 }
 
 interface AuthContextType {
@@ -38,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
-      .select('role, first_name, last_name, whatsapp')
+      .select('role, first_name, last_name, whatsapp, plan_id, credits_used, monthly_limit_snapshot')
       .eq('id', userId)
       .single();
     

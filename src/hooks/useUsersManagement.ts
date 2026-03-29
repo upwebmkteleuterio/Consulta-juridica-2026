@@ -30,15 +30,12 @@ export const useUsersManagement = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Busca perfis com informações de planos
       const { data, error: fetchError } = await supabase
         .from('profiles')
-        .select('*, plans(name, monthly_limit)')
+        .select('*, plans(name)')
         .order('updated_at', { ascending: false });
 
       if (fetchError) throw fetchError;
-
-      const { data: adminSettings } = await supabase.from('admin_settings').select('free_monthly_limit').limit(1).single();
 
       const formattedUsers: UserProfile[] = data.map(u => ({
         id: u.id,
@@ -47,7 +44,7 @@ export const useUsersManagement = () => {
         whatsapp: u.whatsapp || '---',
         plan: u.plans?.name || 'FREE',
         credits_used: u.credits_used || 0,
-        credits_limit: u.plans?.monthly_limit || adminSettings?.free_monthly_limit || 3,
+        credits_limit: u.monthly_limit_snapshot || 0, // Mostra o limite snapshot real
         last_activity: new Date(u.updated_at).toLocaleDateString('pt-BR'),
         is_admin: u.role === 'admin'
       }));
