@@ -15,6 +15,7 @@ import MyAccount from './pages/MyAccount';
 import Modal from './components/Modal';
 import AuthModal from './components/AuthModal';
 import LimitModal from './components/LimitModal';
+import DebugOverlay from './components/DebugOverlay';
 import { getGeminiStreamResponse } from './services/gemini';
 import { DEFAULT_ADMIN_SETTINGS } from './constants';
 import { supabase } from './integrations/supabase/client';
@@ -57,7 +58,7 @@ const AppContent: React.FC = () => {
         setAdminSettings({
           officeName: data.office_name,
           officeDescription: data.office_description,
-          founders_info: data.founders_info,
+          foundersInfo: data.founders_info,
           addresses: data.addresses,
           malicePrompt: data.malice_prompt,
           negativePrompt: data.negative_prompt,
@@ -172,6 +173,9 @@ const AppContent: React.FC = () => {
         onClose={() => setIsLimitModalOpen(false)} 
         isPro={profile?.subscription_status === 'pro'} 
       />
+
+      {/* Inspetor de Diagnóstico Avançado */}
+      <DebugOverlay />
     </>
   );
 };
