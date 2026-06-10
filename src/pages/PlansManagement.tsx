@@ -78,6 +78,23 @@ const PlansManagement = () => {
                       className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">Créditos do Plano</label>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        min="0"
+                        value={plan.monthly_limit} 
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          updatePlan(plan.id, { monthly_limit: isNaN(val) ? 0 : val });
+                        }}
+                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 pr-20 text-sm text-gray-900 focus:bg-white outline-none transition-all"
+                        placeholder="Ex: 50"
+                      />
+                      <div className="absolute right-3 top-3 text-gray-400 text-xs font-bold">créditos</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
