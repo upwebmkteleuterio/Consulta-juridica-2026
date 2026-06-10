@@ -37,10 +37,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     const fetchLimits = async () => {
       const { data } = await supabase.from('admin_settings').select('free_monthly_limit, admin_monthly_limit').limit(1).single();
-      if (data) setLimits({ 
-        free: data.free_monthly_limit || 3, 
-        admin: data.admin_monthly_limit || 9999 
-      });
+      if (data) {
+        setLimits({ 
+          free: typeof data.free_monthly_limit === 'number' ? data.free_monthly_limit : 3, 
+          admin: typeof data.admin_monthly_limit === 'number' ? data.admin_monthly_limit : 9999 
+        });
+      }
     };
     fetchLimits();
   }, [profile?.credits_used, profile?.total_purchased_credits]); 

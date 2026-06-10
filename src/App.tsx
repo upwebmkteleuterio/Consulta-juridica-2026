@@ -59,12 +59,14 @@ const AppContent: React.FC = () => {
           officeDescription: data.office_description,
           foundersInfo: data.founders_info,
           addresses: data.addresses,
+          malice_prompt: data.malice_prompt, // Keep database property name consistent if needed
+          officeDescriptionPlaceholder: "", // Temp
           malicePrompt: data.malice_prompt,
           negativePrompt: data.negative_prompt,
           whatsappNumber: data.whatsapp_number,
           internalInstructions: data.internal_instructions,
-          freeMonthlyLimit: data.free_monthly_limit || 3,
-          adminMonthlyLimit: data.admin_monthly_limit || 9999
+          freeMonthlyLimit: typeof data.free_monthly_limit === 'number' ? data.free_monthly_limit : 3,
+          adminMonthlyLimit: typeof data.admin_monthly_limit === 'number' ? data.admin_monthly_limit : 9999
         });
       }
     };
@@ -78,9 +80,8 @@ const AppContent: React.FC = () => {
       return;
     }
 
-    // Calcula o limite real consultando os créditos comprados acumulados e o limite gratuito global
-    const limit = profile?.role === 'admin'
-      ? adminSettings.adminMonthlyLimit
+    const limit = profile?.role === 'admin' 
+      ? adminSettings.adminMonthlyLimit 
       : (profile?.total_purchased_credits || 0) + adminSettings.freeMonthlyLimit;
 
     if ((profile?.credits_used || 0) >= limit) {
