@@ -78,11 +78,10 @@ const AppContent: React.FC = () => {
       return;
     }
 
-    const limit = profile?.role === 'admin' 
-      ? adminSettings.adminMonthlyLimit 
-      : (profile?.subscription_status === 'pro' 
-          ? (profile?.monthly_limit_snapshot || 50) 
-          : adminSettings.freeMonthlyLimit);
+    // Calcula o limite real consultando os créditos comprados acumulados e o limite gratuito global
+    const limit = profile?.role === 'admin'
+      ? adminSettings.adminMonthlyLimit
+      : (profile?.total_purchased_credits || 0) + adminSettings.freeMonthlyLimit;
 
     if ((profile?.credits_used || 0) >= limit) {
       setIsLimitModalOpen(true);

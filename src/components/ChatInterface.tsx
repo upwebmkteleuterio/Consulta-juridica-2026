@@ -22,7 +22,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ state, settings, onSend, 
   const [whatsappLink, setWhatsappLink] = useState<string | null>(null);
 
   const creditsUsed = profile?.credits_used || 0;
-  const creditsLimit = profile?.role === 'admin' ? 9999 : (profile?.monthly_limit_snapshot || settings.freeMonthlyLimit || 3);
+  const creditsLimit = profile?.role === 'admin'
+    ? settings.adminMonthlyLimit
+    : (profile?.total_purchased_credits || 0) + settings.freeMonthlyLimit;
   const hasCredits = creditsUsed < creditsLimit;
 
   useEffect(() => {

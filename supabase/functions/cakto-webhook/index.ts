@@ -37,12 +37,22 @@ serve(async (req) => {
         .eq('product_id', productId)
         .single()
       
-      // 1. Atualiza Perfil
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('total_purchased_credits')
+        .eq('id', userId)
+        .single()
+
+      const currentPurchased = profile?.total_purchased_credits || 0
+      const planCredits = plan?.monthly_limit || 0
+      const newPurchased = currentPurchased + planCredits
+
+      // 1. Atualiza Perfil adicionando os créditos de forma acumulativa (Recarga)
       await supabaseClient.from('profiles').update({
         plan_id: plan?.id || null,
         subscription_status: 'pro',
-        credits_used: 0,
-        monthly_limit_snapshot: plan?.monthly_limit || 50,
+        total_purchased_credits: newPurchased,
+        monthly_limit_snapshot: newPurchased, // Mantém compatibilidade com lógicas legadas
         last_payment_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }).eq('id', userId)
@@ -52,23 +62,39 @@ serve(async (req) => {
         user_id: userId,
         amount: plan?.price || '---',
         status: 'approved',
-        plan_name: plan?.name || 'Plano PRO',
+        plan_name: plan?.name || 'Recarga de Créditos',
         event_type: event
       });
 
-      console.log(`[cakto-webhook] ${customerEmail} atualizado e registrado.`);
+      console.log(`[cakto-webhook] Recarga de ${planCredits} créditos aprovada para ${customerEmail}. Novo saldo de créditos comprados: ${newPurchased}`);
     } 
-    else if (['subscription_canceled', 'subscription_renewal_refused', 'refund'].includes(event)) {
-      const { data: settings } = await supabaseClient.from('admin_settings').select('free_monthly_limit').single()
+    else if (['refund'].includes(event)) {
+      // Se houver reembolso, remove os créditos comprados para evitar fraudes
+      const { data: plan } = await supabaseClient
+        .from('plans')
+        .select('monthly_limit')
+        .eq('product_id', productId)
+        .single()
       
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('total_purchased_credits')
+        .eq('id', userId)
+        .single()
+      
+      const planCredits = plan?.monthly_limit || 0
+      const currentPurchased = profile?.total_purchased_credits || 0
+      const newPurchased = Math.max(0, currentPurchased - planCredits)
+
       await supabaseClient.from('profiles').update({
         plan_id: null,
         subscription_status: 'free',
-        monthly_limit_snapshot: settings?.free_monthly_limit || 3,
+        total_purchased_credits: newPurchased,
+        monthly_limit_snapshot: newPurchased,
         updated_at: new Date().toISOString()
       }).eq('id', userId)
 
-      console.log(`[cakto-webhook] ${customerEmail} rebaixado.`);
+      console.log(`[cakto-webhook] Reembolso processado para ${customerEmail}. Créditos reduzidos de ${currentPurchased} para ${newPurchased}.`);
     }
 
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders })

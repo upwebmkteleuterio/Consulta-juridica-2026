@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       });
     };
     fetchLimits();
-  }, [profile?.credits_used]); 
+  }, [profile?.credits_used, profile?.total_purchased_credits]); 
 
   const mainMenu = [
     { id: 'home', label: 'Consulta Jurídica', icon: MessageSquare, path: '/' },
@@ -58,18 +58,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { id: 'config', label: 'Cérebro da IA', icon: Sliders, path: '/adm/configuracoes' },
   ];
 
-  // Cálculo de limites globais
+  // Cálculo de limites globais + créditos comprados acumulativos
   const totalLimit = profile?.role === 'admin' 
     ? limits.admin 
-    : (profile?.subscription_status === 'pro' 
-        ? (profile?.monthly_limit_snapshot || 50) 
-        : limits.free);
+    : (profile?.total_purchased_credits || 0) + limits.free;
 
   const used = profile?.credits_used || 0;
   const remaining = Math.max(0, totalLimit - used);
-  const percentage = Math.min((used / totalLimit) * 100, 100);
   
-  const barColor = remaining <= 0 ? 'bg-gray-600' : (remaining <= 2 ? 'bg-red-500' : 'bg-champagne');
+  // A batinha (barra de progresso) deve descender conforme os créditos acabam (mostra a porcentagem restante)
+  const percentage = totalLimit > 0 ? Math.min((remaining / totalLimit) * 100, 100) : 0;
+  
+  // Vermelha quando faltar 2 ou menos, amarela/champagne no restante, cinza ao zerar
+  const barColor = remaining <= 0 
+    ? 'bg-gray-800' 
+    : (remaining <= 2 ? 'bg-red-500 animate-pulse' : 'bg-champagne');
 
   const handleNav = (path: string) => {
     navigate(path);
@@ -147,12 +150,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           {user && (
             <div className="bg-[#0B1120] rounded-2xl p-5 text-white space-y-4 shadow-lg mx-2">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Créditos / Mês</span>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Seus Créditos</span>
                 <span className={cn(
                   "text-[10px] px-2 py-0.5 rounded text-white font-bold",
                   isAdmin ? "bg-red-500" : "bg-champagne"
                 )}>
-                  {isAdmin ? 'Admin' : (profile?.subscription_status === 'pro' ? 'Pro' : 'Grátis')}
+                  {isAdmin ? 'Admin' : ((profile?.total_purchased_credits || 0) > 0 ? 'Recarga' : 'Grátis')}
                 </span>
               </div>
               <div className="space-y-2">
