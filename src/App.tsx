@@ -112,10 +112,11 @@ const AppContent: React.FC = () => {
         }
       }
 
-      await supabase.from('profiles').update({ 
-        credits_used: (profile?.credits_used || 0) + 1,
-        updated_at: new Date().toISOString()
-      }).eq('id', user.id);
+      const { error: rpcError } = await supabase.rpc('increment_user_credits');
+      if (rpcError) {
+        console.error("Erro ao computar créditos:", rpcError);
+        throw rpcError;
+      }
 
       await refreshProfile();
 
