@@ -1,160 +1,172 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, User, Crown, Save, Loader2, Info, Settings } from 'lucide-react';
-import { supabase } from '../integrations/supabase/client';
-import { usePlans } from '../hooks/usePlans';
+import { supabase } from '../lib/supabase';
+import { Shield, User, Save, Loader2 } from 'lucide-react';
 
 const UsageLimits = () => {
-  const { plans, updatePlan, saveAll: savePlans, isSaving: isSavingPlans } = usePlans();
   const [freeLimit, setFreeLimit] = useState(3);
   const [adminLimit, setAdminLimit] = useState(9999);
-  const [isSavingAdmin, setIsSavingAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     const fetchAdminSettings = async () => {
-      const { data } = await supabase.from('admin_settings').select('free_monthly_limit, admin_monthly_limit').limit(1).single();
-      if (data) {
-        setFreeLimit(data.free_monthly_limit || 3);
-        setAdminLimit(data.admin_monthly_limit || 9999);
+      try {
+        const { data, error } = await supabase
+          .from('admin_settings')
+          .select('free_monthly_limit, admin_monthly_limit')
+          .limit(1)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          // Usando ?? (nullish coalescing) para que o valor 0 seja considerado válido e não reverta para o padrão
+          setFreeLimit(data.free_monthly_limit ?? 3);
+          setAdminLimit(data.admin_monthly_limit ?? 9999);
+        }
+      } catch (err: any) {
+        console.error('Erro ao buscar limites:', err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     fetchAdminSettings();
   }, []);
 
   const handleSaveAll = async () => {
-    setIsSavingAdmin(true);
+    setIsSaving(true);
+    setMessage(null);
     try {
-      const { data: settings } = await supabase.from('admin_settings').select('id').limit(1).single();
+      const { data: settings, error: fetchError } = await supabase
+        .from('admin_settings')
+        .select('id')
+        .limit(1)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       if (settings) {
-        await supabase.from('admin_settings').update({ 
-          free_monthly_limit: freeLimit,
-          admin_monthly_limit: adminLimit
-        }).eq('id', settings.id);
+        const { error: updateError } = await supabase
+          .from('admin_settings')
+          .update({ 
+            free_monthly_limit: freeLimit,
+            admin_monthly_limit: adminLimit,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', settings.id);
+
+        if (updateError) throw updateError;
+        setMessage({ type: 'success', text: 'Limites de uso atualizados com sucesso!' });
       }
-      
-      await savePlans();
-      alert("Configurações de limites salvas com sucesso!");
-    } catch (err) {
-      alert("Erro ao salvar limites.");
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Erro ao salvar limites.' });
     } finally {
-      setIsSavingAdmin(false);
+      setIsSaving(false);
     }
   };
 
-  if (isLoading) return <div className="p-8 text-gray-500">Carregando limites...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#C5A059]" />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-50 rounded-lg">
-              <ShieldCheck className="w-6 h-6 text-champagne" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">Limites de Uso</h1>
-          </div>
-          <p className="text-sm text-gray-500">Controle quanto cada tipo de usuário pode utilizar da IA Jurídica.</p>
-        </div>
-        <button 
-          onClick={handleSaveAll}
-          disabled={isSavingAdmin || isSavingPlans}
-          className="flex items-center gap-2 bg-[#00A86B] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:brightness-105 transition-all disabled:opacity-50"
-        >
-          {isSavingAdmin || isSavingPlans ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Salvar Configurações
-        </button>
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-serif text-[#C5A059] mb-2">Limites de Uso</h1>
+        <p className="text-gray-400">Gerencie os limites de créditos e uso para diferentes tipos de usuários.</p>
       </div>
 
-      <div className="space-y-6">
-        {/* Card Administradores */}
-        <div className="bg-white border-l-4 border-red-500 rounded-2xl shadow-sm p-8 border border-gray-100 flex flex-col md:flex-row gap-8 items-start">
-          <div className="bg-red-50 p-4 rounded-2xl">
-            <Settings className="w-8 h-8 text-red-600" />
+      {message && (
+        <div className={`p-4 rounded-lg border ${
+          message.type === 'success' 
+            ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-200' 
+            : 'bg-rose-950/30 border-rose-500/50 text-rose-200'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Limites de Usuários Free */}
+        <div className="bg-[#1A2333] p-6 rounded-xl border border-gray-800 space-y-4">
+          <div className="flex items-center space-x-3 text-[#C5A059]">
+            <User className="w-6 h-6" />
+            <h2 className="text-xl font-medium">Usuários Free</h2>
           </div>
-          <div className="flex-1 space-y-6">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Limites para Administradores</h2>
-              <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">Contas com cargo Admin</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Consultas IA Jurídica (Mensal)</label>
-                <input 
-                  type="number"
-                  value={adminLimit}
-                  onChange={(e) => setAdminLimit(parseInt(e.target.value) || 0)}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
-                />
-              </div>
+          <p className="text-sm text-gray-400">
+            Créditos mensais gratuitos atribuídos automaticamente a novos usuários cadastrados.
+          </p>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">Créditos de Entrada (Free)</label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                value={freeLimit}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setFreeLimit(isNaN(val) ? 0 : val);
+                }}
+                className="w-full bg-[#0B1120] border border-gray-800 rounded-lg py-2.5 pl-3 pr-10 text-white focus:outline-none focus:border-[#C5A059]"
+              />
+              <div className="absolute right-3 top-3 text-gray-500 text-sm">créditos</div>
             </div>
           </div>
         </div>
 
-        {/* Card Gratuito */}
-        <div className="bg-white border-l-4 border-blue-400 rounded-2xl shadow-sm p-8 border border-gray-100 flex flex-col md:flex-row gap-8 items-start">
-          <div className="bg-blue-50 p-4 rounded-2xl">
-            <User className="w-8 h-8 text-blue-600" />
+        {/* Limites de Administradores */}
+        <div className="bg-[#1A2333] p-6 rounded-xl border border-gray-800 space-y-4">
+          <div className="flex items-center space-x-3 text-[#C5A059]">
+            <Shield className="w-6 h-6" />
+            <h2 className="text-xl font-medium">Administradores</h2>
           </div>
-          <div className="flex-1 space-y-6">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Limites Gratuitos (Usuários Logados)</h2>
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Usuário logado s/ assinatura</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Consultas IA Jurídica (Mensal)</label>
-                <input 
-                  type="number"
-                  value={freeLimit}
-                  onChange={(e) => setFreeLimit(parseInt(e.target.value) || 0)}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
-                />
-              </div>
+          <p className="text-sm text-gray-400">
+            Limite de créditos para as contas administrativas. Recomendado manter um valor alto.
+          </p>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">Créditos de Entrada (Admin)</label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                value={adminLimit}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setAdminLimit(isNaN(val) ? 0 : val);
+                }}
+                className="w-full bg-[#0B1120] border border-gray-800 rounded-lg py-2.5 pl-3 pr-10 text-white focus:outline-none focus:border-[#C5A059]"
+              />
+              <div className="absolute right-3 top-3 text-gray-500 text-sm">créditos</div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Seção Planos PRO */}
-        <div className="pt-8 space-y-6">
-          <div className="flex items-center gap-2">
-            <Crown className="w-5 h-5 text-champagne" />
-            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Planos Pro</h2>
-          </div>
-
-          {plans.map((plan) => (
-            <div key={plan.id} className="bg-white border-l-4 border-champagne rounded-2xl shadow-sm p-8 border border-gray-100 flex flex-col md:flex-row gap-8 items-start">
-              <div className="bg-yellow-50 p-4 rounded-2xl">
-                <Crown className="w-8 h-8 text-champagne" />
-              </div>
-              <div className="flex-1 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
-                    <p className="text-xs font-bold text-champagne">R$ {plan.price}</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                    <Info className="w-3 h-3" />
-                    Configuração Individual
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase">Consultas IA Jurídica (Mensal)</label>
-                    <input 
-                      type="number"
-                      value={plan.monthly_limit}
-                      onChange={(e) => updatePlan(plan.id, { monthly_limit: parseInt(e.target.value) || 0 })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-900 focus:bg-white outline-none transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="flex justify-end pt-4">
+        <button
+          onClick={handleSaveAll}
+          disabled={isSaving}
+          className="flex items-center space-x-2 bg-[#C5A059] text-[#0B1120] px-6 py-2.5 rounded-lg font-medium hover:bg-opacity-90 transition-all disabled:opacity-50"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Salvando...</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-5 h-5" />
+              <span>Salvar Configurações</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
